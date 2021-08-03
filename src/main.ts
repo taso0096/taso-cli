@@ -3,4 +3,6 @@ import App from './App.vue';
 import './registerServiceWorker';
 import router from './router';
 
+import '@/assets/sass/main.scss';
+
 createApp(App).use(router).mount('#app');

@@ -1,7 +1,8 @@
 <template>
   <div class="cmd-line">
     <span class="cmd-line__prompt">
-      <span>taso-cli</span>
+      <span class="green--text">taso-cli</span>
+      <span class="blue--text">~</span>
       <span>$</span>
     </span>
     <span
