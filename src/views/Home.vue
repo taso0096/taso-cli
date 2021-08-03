@@ -37,7 +37,8 @@ export default defineComponent({
       }
     };
 
-    onMounted(() => {
+    onMounted(async() => {
+      await tasoCli.boot();
       getInput();
     });
 
