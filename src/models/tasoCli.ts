@@ -6,6 +6,12 @@ interface Result {
 interface DirObject {
   [key: string]: any;
 }
+type FileType = undefined // 存在しない
+  | null // 権限なし（ディレクトリ）
+  | true // 権限あり（ファイル）
+  | false // 権限なし（ファイル）
+  | DirObject;
+
 interface GitHubFile {
   path: string;
   type: string;
@@ -44,6 +50,39 @@ export class TasoCli {
       const repoDir = await this._getRepoDir();
       this.rootDir.home[this.user].repositories[this.repo] = repoDir;
     }
+  }
+
+  getFullPath(path: string) {
+    const argPath = path.split(/\/+/);
+    if (argPath[0] === '') {
+      argPath.shift();
+    } else if (argPath[0] === '~') {
+      argPath.shift();
+      argPath.unshift(...['home', this.user]);
+    } else {
+      argPath.unshift(...this.cd.split(/\/+/));
+    }
+
+    const trimPath = argPath.reduce((newPath: string[], key: string) => {
+      if (key === '..') {
+        newPath.pop();
+      } else if (!['', '.'].includes(key)) {
+        newPath.push(key);
+      }
+      return newPath;
+    }, []);
+
+    const file: FileType = trimPath.reduce((dir, key) => {
+      if (dir && dir[key] !== undefined) {
+        return dir[key];
+      }
+      return undefined;
+    }, this.rootDir);
+
+    return {
+      file,
+      fullPath: file ? ['', ...trimPath].join('/') : null
+    };
   }
 
   execCmd(cmd: string): void {
