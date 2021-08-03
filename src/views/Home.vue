@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, onMounted } from 'vue';
+import { defineComponent, ref, reactive, onMounted, nextTick } from 'vue';
 import CmdLine from '@/components/CmdLine.vue';
 import { Result, History } from '@/types/cmdLine';
 
@@ -32,6 +32,7 @@ export default defineComponent({
       };
       histories.push({ cmd, result });
       getInput();
+      nextTick(() => window.scroll(0, document.documentElement.scrollHeight - window.innerHeight));
     };
 
     const focusInput = () => {

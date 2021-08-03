@@ -2,15 +2,19 @@
   <div class="cmd-line">
     <span class="cmd-line__prompt">
       <span class="green--text">taso-cli</span>
-      <span class="blue--text">~</span>
-      <span>$</span>
+      <span class="blue--text">:~</span>
+      <span>$ </span>
     </span>
     <span
       v-if="inputResolve"
       ref="inputRef"
+      @input="syncInput"
       @keydown.enter.prevent="submitCmd"
       contenteditable
       class="cmd-line__input"
+      :style="!inputCmd && {
+        display: 'inline-block'
+      }"
     ></span>
     <span
       v-else
@@ -32,15 +36,7 @@
   span {
     vertical-align: middle;
   }
-  .cmd-line__prompt {
-    margin-right: 4px;
-
-    span {
-      margin-right: 4px;
-    }
-  }
   .cmd-line__input {
-    display: inline-block;
     outline: none;
     word-break: break-all;
   }
@@ -51,7 +47,7 @@
 </style>
 
 <script>
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 
 export default defineComponent({
   name: 'CmdLine',
@@ -63,6 +59,7 @@ export default defineComponent({
   setup() {
     const inputRef = ref();
     const inputResolve = ref(null);
+    const inputCmd = ref('');
 
     const input = () => {
       return new Promise(resolve => {
@@ -70,8 +67,13 @@ export default defineComponent({
       });
     };
 
+    const syncInput = e => {
+      inputCmd.value = e.target.innerText;
+    };
+
     const submitCmd = () => {
-      inputResolve.value(inputRef.value.innerText);
+      inputResolve.value(inputCmd.value);
+      inputCmd.value = '';
       inputRef.value.innerText = '';
       inputResolve.value = null;
     };
@@ -79,7 +81,9 @@ export default defineComponent({
     return {
       inputRef,
       inputResolve,
+      inputCmd,
       input,
+      syncInput,
       submitCmd
     };
   }
