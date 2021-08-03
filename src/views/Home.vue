@@ -1,10 +1,10 @@
 <template>
   <div class="home" @click="focusInput">
     <div
-      v-for="(history, i) in histories"
+      v-for="(cmd, i) in cmdHistory"
       :key="i"
     >
-      <cmd-line :cmd="history.cmd" />
+      <cmd-line :cmd="cmd" />
     </div>
     <cmd-line ref="cmdLineRef" />
   </div>
@@ -13,7 +13,7 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, onMounted, nextTick } from 'vue';
 import CmdLine from '@/components/CmdLine.vue';
-import { Result, History } from '@/types/cmdLine';
+import { Result } from '@/types/cmdLine';
 
 export default defineComponent({
   name: 'Home',
@@ -22,7 +22,8 @@ export default defineComponent({
   },
   setup() {
     const cmdLineRef = ref();
-    const histories = reactive<History[]>([]);
+    const cmdHistory = reactive<string[]>([]);
+    const cmdResults = reactive<Result[]>([]);
 
     const getInput = async() => {
       const cmd = await cmdLineRef.value.input();
@@ -30,7 +31,8 @@ export default defineComponent({
         type: null,
         data: null
       };
-      histories.push({ cmd, result });
+      cmdHistory.push(cmd);
+      cmdResults.push(result);
       getInput();
       nextTick(() => window.scroll(0, document.documentElement.scrollHeight - window.innerHeight));
     };
@@ -47,7 +49,8 @@ export default defineComponent({
 
     return {
       cmdLineRef,
-      histories,
+      cmdHistory,
+      cmdResults,
       focusInput
     };
   }
