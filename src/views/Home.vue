@@ -32,8 +32,8 @@ export default defineComponent({
     const tasoShell = reactive<TasoShell>(new TasoShell());
 
     const bootBIOS = async() => {
-      const tasoKernel = new TasoKernel();
-      await tasoKernel.boot(tasoShell);
+      const tasoKernel = new TasoKernel(tasoShell);
+      await tasoKernel.boot();
       getInput();
     };
 

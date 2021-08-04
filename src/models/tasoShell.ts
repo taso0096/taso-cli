@@ -5,7 +5,7 @@ interface CmdData {
   cmd: string;
 }
 
-interface Result {
+export interface Result {
   type: 'text' | null;
   data: string | null;
 }
@@ -25,6 +25,11 @@ interface GitHubFile {
   sha: string;
 }
 type GitHubDir = GitHubFile[];
+
+interface FileData {
+  type: FileType;
+  fullPath: string;
+}
 
 export class TasoShell {
   tasoKernel: TasoKernel | null;
@@ -65,7 +70,7 @@ export class TasoShell {
     }
   }
 
-  getFullPath(path: string) {
+  getFullPath(path: string): FileData {
     const argPath = path.split(/\/+/);
     if (argPath[0] === '') {
       argPath.shift();
@@ -93,8 +98,8 @@ export class TasoShell {
     }, this.rootDir);
 
     return {
-      file,
-      fullPath: file ? ['', ...trimPath].join('/') : null
+      type: file,
+      fullPath: ['', ...trimPath].join('/') || '/'
     };
   }
 
@@ -104,15 +109,30 @@ export class TasoShell {
   }
 
   execCmd(cmd: string): void {
-    const result = {
-      type: null,
-      data: null
-    };
+    if (!this.tasoKernel) {
+      return;
+    }
     this.history.push({
       cd: this.getTrimCd(),
       cmd
     });
-    this.result.push(result);
+    if (!cmd) {
+      this.result.push(this.tasoKernel.nullResult);
+      return;
+    }
+
+    const cmdMap = new Map([
+      ['cd', this.tasoKernel.cd]
+    ]);
+    const cmdFn = cmdMap.get(cmd.split(' ')[0]);
+    if (!cmdFn) {
+      this.result.push({
+        type: 'text',
+        data: `Command '${cmd.split(' ')[0]}' not found`
+      });
+      return;
+    }
+    this.result.push(cmdFn(cmd));
   }
 
   async _getRepoDir(): Promise<DirObject> {
