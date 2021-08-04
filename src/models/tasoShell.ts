@@ -1,6 +1,8 @@
+import { TasoKernel } from '@/models/tasoKernel';
+
 interface Result {
-  type: null | 'text';
-  data: null | string;
+  type: 'text' | null;
+  data: string | null;
 }
 
 interface DirObject {
@@ -19,7 +21,9 @@ interface GitHubFile {
 }
 type GitHubDir = GitHubFile[];
 
-export class TasoCli {
+export class TasoShell {
+  tasoKernel: TasoKernel | null;
+
   user: string;
   rootDir: DirObject;
   cd: string;
@@ -30,6 +34,8 @@ export class TasoCli {
   allowGetRepo: boolean;
 
   constructor() {
+    this.tasoKernel = null;
+
     this.user = 'taso0096';
     this.rootDir = {};
     this.cd = `/home/${this.user}`;
@@ -40,7 +46,9 @@ export class TasoCli {
     this.allowGetRepo = false;
   }
 
-  async boot(): Promise<void> {
+  async boot(tasoKernel: TasoKernel): Promise<void> {
+    this.tasoKernel = tasoKernel;
+
     this.rootDir.home = {};
     this.rootDir.home[this.user] = {
       repositories: {}

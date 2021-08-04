@@ -1,7 +1,7 @@
 <template>
   <div class="home" @click="focusInput">
     <div
-      v-for="(cmd, i) in tasoCli.history"
+      v-for="(cmd, i) in tasoShell.history"
       :key="i"
     >
       <cmd-line :cmd="cmd" />
@@ -13,7 +13,8 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, onMounted, nextTick } from 'vue';
 import CmdLine from '@/components/CmdLine.vue';
-import { TasoCli } from '@/models/tasoCli';
+import { TasoKernel } from '@/models/tasoKernel';
+import { TasoShell } from '@/models/tasoShell';
 
 export default defineComponent({
   name: 'Home',
@@ -22,11 +23,17 @@ export default defineComponent({
   },
   setup() {
     const cmdLineRef = ref();
-    const tasoCli = reactive<TasoCli>(new TasoCli());
+    const tasoShell = reactive<TasoShell>(new TasoShell());
+
+    const bootBIOS = async() => {
+      const tasoKernel = new TasoKernel();
+      await tasoKernel.boot(tasoShell);
+      getInput();
+    };
 
     const getInput = async() => {
       const cmd = await cmdLineRef.value.input();
-      tasoCli.execCmd(cmd);
+      tasoShell.execCmd(cmd);
       getInput();
       nextTick(() => window.scroll(0, document.documentElement.scrollHeight - window.innerHeight));
     };
@@ -38,13 +45,12 @@ export default defineComponent({
     };
 
     onMounted(async() => {
-      await tasoCli.boot();
-      getInput();
+      await bootBIOS();
     });
 
     return {
       cmdLineRef,
-      tasoCli,
+      tasoShell,
       focusInput
     };
   }
