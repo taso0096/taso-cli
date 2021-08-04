@@ -2,7 +2,7 @@
   <div class="cmd-line">
     <span class="cmd-line__prompt">
       <span class="green--text">taso-cli</span>
-      <span class="blue--text">:~</span>
+      <span class="blue--text">:{{ cd }}</span>
       <span>$ </span>
     </span>
     <span
@@ -47,11 +47,14 @@
 </style>
 
 <script>
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref } from 'vue';
 
 export default defineComponent({
   name: 'CmdLine',
   props: {
+    cd: {
+      type: String
+    },
     cmd: {
       type: String
     }
@@ -72,7 +75,7 @@ export default defineComponent({
     };
 
     const submitCmd = () => {
-      inputResolve.value(inputCmd.value);
+      inputResolve.value(inputRef.value.innerText);
       inputCmd.value = '';
       inputRef.value.innerText = '';
       inputResolve.value = null;

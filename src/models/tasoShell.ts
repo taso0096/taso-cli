@@ -1,5 +1,10 @@
 import { TasoKernel } from '@/models/tasoKernel';
 
+interface CmdData {
+  cd: string;
+  cmd: string;
+}
+
 interface Result {
   type: 'text' | null;
   data: string | null;
@@ -27,7 +32,7 @@ export class TasoShell {
   user: string;
   rootDir: DirObject;
   cd: string;
-  history: string[];
+  history: CmdData[];
   result: Result[];
 
   repo: string;
@@ -93,12 +98,20 @@ export class TasoShell {
     };
   }
 
+  getTrimCd(): string {
+    const regexp = new RegExp(`^\\/home\\/${this.user}\\/`);
+    return this.cd === `/home/${this.user}` ? '~' : this.cd.replace(regexp, '~/');
+  }
+
   execCmd(cmd: string): void {
     const result = {
       type: null,
       data: null
     };
-    this.history.push(cmd);
+    this.history.push({
+      cd: this.getTrimCd(),
+      cmd
+    });
     this.result.push(result);
   }
 

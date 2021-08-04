@@ -1,12 +1,18 @@
 <template>
   <div class="home" @click="focusInput">
     <div
-      v-for="(cmd, i) in tasoShell.history"
+      v-for="(data, i) in tasoShell.history"
       :key="i"
     >
-      <cmd-line :cmd="cmd" />
+      <cmd-line
+        :cd="data.cd"
+        :cmd="data.cmd"
+      />
     </div>
-    <cmd-line ref="cmdLineRef" />
+    <cmd-line
+      ref="cmdLineRef"
+      :cd="tasoShell.getTrimCd()"
+    />
   </div>
 </template>
 
