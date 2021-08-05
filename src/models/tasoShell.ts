@@ -38,7 +38,7 @@ export class TasoShell {
   rootDir: DirObject;
   cd: string;
   history: CmdData[];
-  result: Result[];
+  results: Result[];
 
   repo: string;
   allowGetRepo: boolean;
@@ -50,7 +50,7 @@ export class TasoShell {
     this.rootDir = {};
     this.cd = `/home/${this.user}`;
     this.history = [];
-    this.result = [];
+    this.results = [];
 
     this.repo = 'taso-cli';
     this.allowGetRepo = false;
@@ -117,22 +117,22 @@ export class TasoShell {
       cmd
     });
     if (!cmd) {
-      this.result.push(this.tasoKernel.nullResult);
+      this.results.push(this.tasoKernel.nullResult);
       return;
     }
-
-    const cmdMap = new Map([
-      ['cd', this.tasoKernel.cd]
-    ]);
-    const cmdFn = cmdMap.get(cmd.split(' ')[0]);
-    if (!cmdFn) {
-      this.result.push({
-        type: 'text',
-        data: `Command '${cmd.split(' ')[0]}' not found`
-      });
-      return;
-    }
-    this.result.push(cmdFn(cmd));
+    const result = ((cmd: string): Result => {
+      const argv = cmd.split(' ');
+      switch (argv[0]) {
+        case 'cd':
+          return this.tasoKernel.cd(cmd);
+        default:
+          return {
+            type: 'text',
+            data: `Command '${argv[0]}' not found`
+          };
+      }
+    })(cmd);
+    this.results.push(result);
   }
 
   async _getRepoDir(): Promise<DirObject> {
