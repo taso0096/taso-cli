@@ -8,6 +8,7 @@
         :cd="data.cd"
         :cmd="data.cmd"
       />
+      <cmd-result :result="tasoShell.results[i]" />
     </div>
     <cmd-line
       ref="cmdLineRef"
@@ -19,13 +20,16 @@
 <script lang="ts">
 import { defineComponent, ref, reactive, onMounted, nextTick } from 'vue';
 import CmdLine from '@/components/CmdLine.vue';
+import CmdResult from '@/components/CmdResult.vue';
+
 import { TasoKernel } from '@/models/tasoKernel';
 import { TasoShell } from '@/models/tasoShell';
 
 export default defineComponent({
   name: 'Home',
   components: {
-    CmdLine
+    CmdLine,
+    CmdResult
   },
   setup() {
     const cmdLineRef = ref();
