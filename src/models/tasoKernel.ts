@@ -59,4 +59,18 @@ export class TasoKernel {
     result.data = resultMap.get(fileData.type) || '';
     return result;
   }
+
+  pwd(cmd: string): Result {
+    const cmdOptions = cmd.split(' ').slice(1);
+    if (cmdOptions.length > 0) {
+      return {
+        type: 'text',
+        data: errorMessages.TooManyArgs('pwd')
+      };
+    }
+    return {
+      type: 'text',
+      data: this.tasoShell.cd
+    };
+  }
 }

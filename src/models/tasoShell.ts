@@ -127,6 +127,8 @@ export class TasoShell {
       switch (argv[0]) {
         case 'cd':
           return this.tasoKernel.cd(cmd);
+        case 'pwd':
+          return this.tasoKernel.pwd(cmd);
         default:
           return {
             type: 'text',
