@@ -1,4 +1,4 @@
-import { TasoKernel } from '@/models/tasoKernel';
+import { TasoKernel, errorMessages } from '@/models/tasoKernel';
 
 interface CmdData {
   cd: string;
@@ -130,7 +130,7 @@ export class TasoShell {
         default:
           return {
             type: 'text',
-            data: `Command '${argv[0]}' not found`
+            data: errorMessages.NoCmd(argv[0])
           };
       }
     })(cmd);

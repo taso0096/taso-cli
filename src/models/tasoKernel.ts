@@ -1,5 +1,17 @@
 import { TasoShell, Result } from '@/models/tasoShell';
 
+interface ErrorMessages {
+  [key: string]: (cmd: string, name?: string) => string
+};
+
+export const errorMessages: ErrorMessages = {
+  NoCmd: cmd => `'${cmd}': command not found`,
+  TooManyArgs: cmd => `${cmd}: too many arguments`,
+  PermissionDenied: (cmd, name) => `${cmd}: ${name}: Permission denied`,
+  NoFile: (cmd, name) => `${cmd}: ${name}: No such file or directory`,
+  NotDir: (cmd, name) => `${cmd}: ${name}: Not a directory`
+};
+
 export class TasoKernel {
   tasoShell: TasoShell;
   nullResult: Result;
@@ -29,7 +41,7 @@ export class TasoKernel {
       case 1:
         break;
       default:
-        result.data = 'cd: too many arguments';
+        result.data = errorMessages.TooManyArgs('cd');
         return result;
     }
 
@@ -39,10 +51,10 @@ export class TasoKernel {
       return this.nullResult;
     }
     const resultMap: Map<undefined | null | boolean, string> = new Map([
-      [undefined, `cd: ${cmdOptions[0]}: No such file or directory`],
-      [null, `cd: ${cmdOptions[0]}: Permission denied`],
-      [true, `cd: ${cmdOptions[0]}: Not a directory`],
-      [false, `cd: ${cmdOptions[0]}: Not a directory`]
+      [undefined, errorMessages.NoFile('cd', cmdOptions[0])],
+      [null, errorMessages.PermissionDenied('cd', cmdOptions[0])],
+      [true, errorMessages.NotDir('cd', cmdOptions[0])],
+      [false, errorMessages.NotDir('cd', cmdOptions[0])]
     ]);
     result.data = resultMap.get(fileData.type) || '';
     return result;
