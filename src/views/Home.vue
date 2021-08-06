@@ -12,7 +12,7 @@
     </div>
     <cmd-line
       ref="cmdLineRef"
-      :cd="tasoShell.getTrimCd()"
+      :cd="tasoShell.getCdName()"
     />
   </div>
 </template>

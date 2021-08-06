@@ -24,6 +24,7 @@ export class TasoKernel {
     const cmdOptions = cmd.split(' ').slice(1);
     switch (cmdOptions.length) {
       case 0:
+        this.tasoShell.cd = this.tasoShell.homeDirFullPath;
         return this.nullResult;
       case 1:
         break;

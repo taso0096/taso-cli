@@ -36,6 +36,7 @@ export class TasoShell {
 
   user: string;
   rootDir: DirObject;
+  homeDirFullPath: string;
   cd: string;
   history: CmdData[];
   results: Result[];
@@ -48,7 +49,8 @@ export class TasoShell {
 
     this.user = 'taso0096';
     this.rootDir = {};
-    this.cd = `/home/${this.user}`;
+    this.homeDirFullPath = `/home/${this.user}`;
+    this.cd = this.homeDirFullPath;
     this.history = [];
     this.results = [];
 
@@ -103,9 +105,9 @@ export class TasoShell {
     };
   }
 
-  getTrimCd(): string {
+  getCdName(): string {
     const regexp = new RegExp(`^\\/home\\/${this.user}\\/`);
-    return this.cd === `/home/${this.user}` ? '~' : this.cd.replace(regexp, '~/');
+    return this.cd === this.homeDirFullPath ? '~' : this.cd.replace(regexp, '~/');
   }
 
   execCmd(cmd: string): void {
@@ -113,7 +115,7 @@ export class TasoShell {
       return;
     }
     this.history.push({
-      cd: this.getTrimCd(),
+      cd: this.getCdName(),
       cmd
     });
     if (!cmd) {
