@@ -2,8 +2,18 @@
   <div class="cmd-result">
     <span
       v-if="result.type === 'text'"
-      class="cmd-line__data"
+      class="cmd-line__text"
     >{{ result.data }}</span>
+
+    <div
+      v-if="result.type === 'files'"
+      class="cmd-line__files"
+    >
+      <div
+        v-for="(file, i) in result.data"
+        :key="i"
+      >{{ file }}</div>
+    </div>
   </div>
 </template>
 
@@ -13,6 +23,8 @@
   line-height: 1.5;
   font-size: 16px;
   font-family: 'Courier Prime', sans-serif;
+  word-break: break-word;
+  white-space: pre-line;
 
   ::selection {
     background: #fce300 !important;
@@ -20,9 +32,11 @@
   span {
     vertical-align: middle;
   }
-  .cmd-line__data {
-    word-break: break-word;
-    white-space: pre-line;
+  .cmd-line__files {
+    > div {
+      display: inline-block;
+      margin-right: 3rem;
+    }
   }
 }
 </style>

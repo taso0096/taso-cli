@@ -73,4 +73,37 @@ export class TasoKernel {
       data: this.tasoShell.cd
     };
   }
+
+  ls(cmd: string): Result {
+    const errorResult: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdOptions = cmd.split(' ').slice(1);
+    if (cmdOptions.length > 1) {
+      errorResult.data = errorMessages.TooManyArgs('ls');
+      return errorResult;
+    }
+
+    const fileData = this.tasoShell.getFullPath(cmdOptions[0] || this.tasoShell.cd);
+    switch (typeof fileData.type) {
+      case 'object':
+        if (fileData.type === null) {
+          break;
+        }
+        return {
+          type: 'files',
+          data: Object.keys(fileData.type)
+        };
+      case 'boolean':
+        errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
+        return errorResult;
+    }
+    const resultMap: Map<undefined | null, string> = new Map([
+      [undefined, errorMessages.NoFile('ls', cmdOptions[0])],
+      [null, errorMessages.PermissionDenied('ls', cmdOptions[0])]
+    ]);
+    errorResult.data = resultMap.get(fileData.type) || '';
+    return errorResult;
+  }
 }

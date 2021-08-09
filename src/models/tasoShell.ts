@@ -6,8 +6,8 @@ interface CmdData {
 }
 
 export interface Result {
-  type: 'text' | null;
-  data: string | null;
+  type: 'text' | 'files' | null;
+  data: string | string[] | null;
 }
 
 interface DirObject {
@@ -63,7 +63,9 @@ export class TasoShell {
 
     this.rootDir.home = {};
     this.rootDir.home[this.user] = {
-      repositories: {}
+      repositories: {},
+      'README.md': true,
+      'root.txt': false
     };
 
     if (this.allowGetRepo) {
@@ -129,6 +131,8 @@ export class TasoShell {
           return this.tasoKernel.cd(cmd);
         case 'pwd':
           return this.tasoKernel.pwd(cmd);
+        case 'ls':
+          return this.tasoKernel.ls(cmd);
         default:
           return {
             type: 'text',
