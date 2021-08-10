@@ -12,6 +12,7 @@
       <div
         v-for="(file, i) in result.data"
         :key="i"
+        :class="file.slice(-1)[0] === '/' && 'blue--text'"
       >{{ file }}</div>
     </div>
   </div>

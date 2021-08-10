@@ -93,7 +93,7 @@ export class TasoKernel {
         }
         return {
           type: 'files',
-          data: Object.keys(fileData.type)
+          data: Object.entries(fileData.type).map(file => file[0] + (file[1] && file[1] !== true ? '/' : ''))
         };
       case 'boolean':
         errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
