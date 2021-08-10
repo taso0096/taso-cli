@@ -62,7 +62,7 @@ export class TasoKernel {
 
   pwd(cmd: string): Result {
     const cmdOptions = cmd.split(' ').slice(1);
-    if (cmdOptions.length > 0) {
+    if (cmdOptions.length >= 1) {
       return {
         type: 'text',
         data: errorMessages.TooManyArgs('pwd')
@@ -80,7 +80,7 @@ export class TasoKernel {
       data: ''
     };
     const cmdOptions = cmd.split(' ').slice(1);
-    if (cmdOptions.length > 1) {
+    if (cmdOptions.length >= 2) {
       errorResult.data = errorMessages.TooManyArgs('ls');
       return errorResult;
     }
@@ -105,5 +105,19 @@ export class TasoKernel {
     ]);
     errorResult.data = resultMap.get(fileData.type) || '';
     return errorResult;
+  }
+
+  date(cmd: string): Result {
+    const result: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdOptions = cmd.split(' ').slice(1);
+    if (cmdOptions.length >= 1) {
+      result.data = errorMessages.TooManyArgs('date');
+      return result;
+    }
+    result.data = String(new Date());
+    return result;
   }
 }

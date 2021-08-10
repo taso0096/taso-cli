@@ -133,6 +133,8 @@ export class TasoShell {
           return this.tasoKernel.pwd(cmd);
         case 'ls':
           return this.tasoKernel.ls(cmd);
+        case 'date':
+          return this.tasoKernel.date(cmd);
         default:
           return {
             type: 'text',
