@@ -1,5 +1,8 @@
 import { TasoKernel, errorMessages } from '@/models/tasoKernel';
-import { DirObject, getRepoDir } from '@/models/makeDirTree';
+import { DirObject, getRootDir, getRepoDir } from '@/models/makeDirTree';
+
+import firebase from 'firebase/app';
+import 'firebase/storage';
 
 interface CmdData {
   cd: string;
@@ -46,22 +49,19 @@ export class TasoShell {
     this.results = [];
 
     this.repo = 'taso-cli';
-    this.allowGetRepo = false;
+    this.allowGetRepo = true;
   }
 
   async boot(tasoKernel: TasoKernel): Promise<void> {
     this.tasoKernel = tasoKernel;
 
-    this.rootDir.home = {};
-    this.rootDir.home[this.user] = {
-      repositories: {},
-      'README.md': true,
-      'root.txt': false
-    };
-
-    if (this.allowGetRepo) {
+    const storageRef = firebase.storage().ref();
+    const rootRef = storageRef.child('/');
+    this.rootDir = await getRootDir(rootRef);
+    const userRepositories = this.getFullPath('~/repositories').type;
+    if (this.allowGetRepo && userRepositories && userRepositories !== true) {
       const repoDir = await getRepoDir(this.user, this.repo);
-      this.rootDir.home[this.user].repositories[this.repo] = repoDir;
+      userRepositories[this.repo] = repoDir;
     }
   }
 
