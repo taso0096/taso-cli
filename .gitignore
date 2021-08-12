@@ -23,5 +23,6 @@ pnpm-debug.log*
 *.sw?
 
 # firebase
+firebaseConfig.ts
 .firebase
 .firebaserc
