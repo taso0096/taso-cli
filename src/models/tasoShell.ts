@@ -1,4 +1,5 @@
 import { TasoKernel, errorMessages } from '@/models/tasoKernel';
+import { DirObject, getRepoDir } from '@/models/makeDirTree';
 
 interface CmdData {
   cd: string;
@@ -10,21 +11,11 @@ export interface Result {
   data: string | string[] | null;
 }
 
-interface DirObject {
-  [key: string]: any;
-}
 type FileType = undefined // 存在しない
   | null // 権限なし（ディレクトリ）
   | true // 権限あり（ファイル）
   | false // 権限なし（ファイル）
   | DirObject;
-
-interface GitHubFile {
-  path: string;
-  type: string;
-  sha: string;
-}
-type GitHubDir = GitHubFile[];
 
 interface FileData {
   type: FileType;
@@ -69,7 +60,7 @@ export class TasoShell {
     };
 
     if (this.allowGetRepo) {
-      const repoDir = await this._getRepoDir();
+      const repoDir = await getRepoDir(this.user, this.repo);
       this.rootDir.home[this.user].repositories[this.repo] = repoDir;
     }
   }
@@ -143,41 +134,5 @@ export class TasoShell {
       }
     })(cmd);
     this.results.push(result);
-  }
-
-  async _getRepoDir(): Promise<DirObject> {
-    const repoDir = {};
-    const commitSha: null | string = await fetch(`https://api.github.com/repos/${this.user}/${this.repo}/commits`)
-      .then(res => {
-        if (res.status !== 200) {
-          throw new Error();
-        }
-        return res.json();
-      })
-      .then(json => json[0].sha)
-      .catch(() => null);
-
-    if (commitSha) {
-      await this._getDir(repoDir, commitSha);
-    }
-    return repoDir;
-  }
-
-  async _getDir(parentDir: DirObject, sha: string): Promise<void> {
-    const dir: GitHubDir = await this._getTree(sha);
-    for (const file of dir) {
-      const { path, type, sha } = file;
-      parentDir[path] = type === 'tree' ? {} : true;
-      if (type === 'tree') {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await this._getDir(parentDir[path], sha);
-      }
-    }
-  }
-
-  async _getTree(sha: string): Promise<GitHubDir> {
-    return fetch(`https://api.github.com/repos/${this.user}/${this.repo}/git/trees/${sha}`)
-      .then(res => res.json())
-      .then(json => json.tree);
   }
 }

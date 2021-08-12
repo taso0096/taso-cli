@@ -2,7 +2,7 @@ import { TasoShell, Result } from '@/models/tasoShell';
 
 interface ErrorMessages {
   [key: string]: (cmd: string, name?: string) => string
-};
+}
 
 export const errorMessages: ErrorMessages = {
   NoCmd: cmd => `'${cmd}': command not found`,
