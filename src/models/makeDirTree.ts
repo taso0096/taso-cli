@@ -21,11 +21,15 @@ const getStorageDir = async(parentDir: DirObject, parentRef: firebase.storage.Re
   return parentRef.listAll()
     .then(async res => {
       for (const dirRef of res.prefixes) {
-        parentDir[dirRef.name] = {};
-        await getStorageDir(parentDir[dirRef.name], dirRef);
+        const dirData = dirRef.name.split(':');
+        parentDir[dirData[0]] = dirData[1] ?? true ? {} : null;
+        if (parentDir[dirData[0]]) {
+          await getStorageDir(parentDir[dirData[0]], dirRef);
+        }
       }
       for (const fileRef of res.items) {
-        parentDir[fileRef.name] = true;
+        const fileData = fileRef.name.split(':');
+        parentDir[fileData[0]] = !!(fileData[1] ?? true);
       }
     })
     .catch();
