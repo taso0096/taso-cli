@@ -1,0 +1,12 @@
+[
+  {
+    "origin": [
+      "https://taso-cli.web.app",
+      "https://taso-cli.firebaseapp.com",
+      "https://cli.taso.tech",
+      "http://localhost:8080/"
+    ],
+    "method": ["GET"],
+    "maxAgeSeconds": 3600
+  }
+]
