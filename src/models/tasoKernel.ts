@@ -28,44 +28,42 @@ export class TasoKernel {
     await this.tasoShell.boot(this);
   }
 
-  cd(cmd: string): Result {
+  cd(argv: string[]): Result {
     const result: Result = {
       type: 'text',
       data: ''
     };
-    const cmdOptions = cmd.split(' ').slice(1);
-    switch (cmdOptions.length) {
-      case 0:
+    switch (argv.length) {
+      case 1:
         this.tasoShell.cd = this.tasoShell.homeDirFullPath;
         return this.nullResult;
-      case 1:
+      case 2:
         break;
       default:
-        result.data = errorMessages.TooManyArgs('cd');
+        result.data = errorMessages.TooManyArgs(argv[0]);
         return result;
     }
 
-    const fileData = this.tasoShell.getFullPath(cmdOptions[0]);
+    const fileData = this.tasoShell.getFullPath(argv[1]);
     if (typeof fileData.type === 'object') {
       this.tasoShell.cd = fileData.fullPath;
       return this.nullResult;
     }
     const resultMap: Map<undefined | null | boolean, string> = new Map([
-      [undefined, errorMessages.NoFile('cd', cmdOptions[0])],
-      [null, errorMessages.PermissionDenied('cd', cmdOptions[0])],
-      [true, errorMessages.NotDir('cd', cmdOptions[0])],
-      [false, errorMessages.NotDir('cd', cmdOptions[0])]
+      [undefined, errorMessages.NoFile(argv[0], argv[1])],
+      [null, errorMessages.PermissionDenied(argv[0], argv[1])],
+      [true, errorMessages.NotDir(argv[0], argv[1])],
+      [false, errorMessages.NotDir(argv[0], argv[1])]
     ]);
     result.data = resultMap.get(fileData.type) || '';
     return result;
   }
 
-  pwd(cmd: string): Result {
-    const cmdOptions = cmd.split(' ').slice(1);
-    if (cmdOptions.length >= 1) {
+  pwd(argv: string[]): Result {
+    if (argv.length > 1) {
       return {
         type: 'text',
-        data: errorMessages.TooManyArgs('pwd')
+        data: errorMessages.TooManyArgs(argv[0])
       };
     }
     return {
@@ -74,18 +72,17 @@ export class TasoKernel {
     };
   }
 
-  ls(cmd: string): Result {
+  ls(argv: string[]): Result {
     const errorResult: Result = {
       type: 'text',
       data: ''
     };
-    const cmdOptions = cmd.split(' ').slice(1);
-    if (cmdOptions.length >= 2) {
-      errorResult.data = errorMessages.TooManyArgs('ls');
+    if (argv.length > 2) {
+      errorResult.data = errorMessages.TooManyArgs(argv[0]);
       return errorResult;
     }
 
-    const fileData = this.tasoShell.getFullPath(cmdOptions[0] || this.tasoShell.cd);
+    const fileData = this.tasoShell.getFullPath(argv[1] || this.tasoShell.cd);
     switch (typeof fileData.type) {
       case 'object':
         if (fileData.type === null) {
@@ -100,21 +97,20 @@ export class TasoKernel {
         return errorResult;
     }
     const resultMap: Map<undefined | null, string> = new Map([
-      [undefined, errorMessages.NoFile('ls', cmdOptions[0])],
-      [null, errorMessages.PermissionDenied('ls', cmdOptions[0])]
+      [undefined, errorMessages.NoFile(argv[0], argv[1])],
+      [null, errorMessages.PermissionDenied(argv[0], argv[1])]
     ]);
     errorResult.data = resultMap.get(fileData.type) || '';
     return errorResult;
   }
 
-  date(cmd: string): Result {
+  date(argv: string[]): Result {
     const result: Result = {
       type: 'text',
       data: ''
     };
-    const cmdOptions = cmd.split(' ').slice(1);
-    if (cmdOptions.length >= 1) {
-      result.data = errorMessages.TooManyArgs('date');
+    if (argv.length > 1) {
+      result.data = errorMessages.TooManyArgs(argv[0]);
       return result;
     }
     result.data = String(new Date());

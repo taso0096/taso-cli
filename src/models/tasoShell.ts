@@ -116,23 +116,23 @@ export class TasoShell {
       return;
     }
     const result = ((cmd: string): Result => {
-      const argv = cmd.split(' ');
+      const argv = cmd.split(/ +/).filter(v => v !== '');
       switch (argv[0]) {
         case 'cd':
-          return this.tasoKernel.cd(cmd);
+          return this.tasoKernel.cd(argv);
         case 'pwd':
-          return this.tasoKernel.pwd(cmd);
+          return this.tasoKernel.pwd(argv);
         case 'ls':
-          return this.tasoKernel.ls(cmd);
+          return this.tasoKernel.ls(argv);
         case 'date':
-          return this.tasoKernel.date(cmd);
+          return this.tasoKernel.date(argv);
         default:
           return {
             type: 'text',
             data: errorMessages.NoCmd(argv[0])
           };
       }
-    })(cmd);
+    })(cmd.replace(/\u00a0/g, '\u0020')); // nbspを通常スペースに変換
     this.results.push(result);
   }
 }
