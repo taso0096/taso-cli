@@ -14,7 +14,7 @@ export interface Result {
   data: string | string[] | null;
 }
 
-type FileType = undefined // 存在しない
+export type FileType = undefined // 存在しない
   | null // 権限なし（ディレクトリ）
   | true // 権限あり（ファイル）
   | false // 権限なし（ファイル）
@@ -103,7 +103,7 @@ export class TasoShell {
     return this.cd === this.homeDirFullPath ? '~' : this.cd.replace(regexp, '~/');
   }
 
-  execCmd(cmd: string): void {
+  async execCmd(cmd: string): Promise<void> {
     if (!this.tasoKernel) {
       return;
     }
@@ -115,7 +115,7 @@ export class TasoShell {
       this.results.push(this.tasoKernel.nullResult);
       return;
     }
-    const result = ((cmd: string): Result => {
+    const result = await ((cmd: string): Promise<Result> | Result => {
       const argv = cmd.split(/ +/).filter(v => v !== '');
       switch (argv[0]) {
         case 'cd':
@@ -126,6 +126,8 @@ export class TasoShell {
           return this.tasoKernel.ls(argv);
         case 'date':
           return this.tasoKernel.date(argv);
+        case 'cat':
+          return this.tasoKernel.cat(argv);
         default:
           return {
             type: 'text',

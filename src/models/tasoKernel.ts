@@ -1,15 +1,36 @@
-import { TasoShell, Result } from '@/models/tasoShell';
+import { TasoShell, Result, FileType } from '@/models/tasoShell';
 
 interface ErrorMessages {
   [key: string]: (cmd: string, name?: string) => string
 }
 
 export const errorMessages: ErrorMessages = {
+  Error: cmd => `'${cmd}': An error has occurred`,
   NoCmd: cmd => `'${cmd}': command not found`,
+  MissingFile: cmd => `'${cmd}': missing file operand`,
   TooManyArgs: cmd => `${cmd}: too many arguments`,
   PermissionDenied: (cmd, name) => `${cmd}: ${name}: Permission denied`,
   NoFile: (cmd, name) => `${cmd}: ${name}: No such file or directory`,
-  NotDir: (cmd, name) => `${cmd}: ${name}: Not a directory`
+  NotDir: (cmd, name) => `${cmd}: ${name}: Not a directory`,
+  IsDir: (cmd, name) => `${cmd}: ${name}: Is a directory`
+};
+
+const getErrorMessage = (type: FileType, cmd: string, name: string): string => {
+  switch (type) {
+    case undefined:
+      return errorMessages.NoFile(cmd, name);
+    case null:
+      return errorMessages.PermissionDenied(cmd, name);
+    case true:
+      return errorMessages.NotDir(cmd, name);
+    case false:
+      if (['cat'].includes(cmd)) {
+        return errorMessages.PermissionDenied(cmd, name);
+      }
+      return errorMessages.NotDir(cmd, name);
+    default:
+      return errorMessages.IsDir(cmd, name);
+  }
 };
 
 export class TasoKernel {
@@ -45,17 +66,11 @@ export class TasoKernel {
     }
 
     const fileData = this.tasoShell.getFullPath(argv[1]);
-    if (typeof fileData.type === 'object') {
+    if (fileData.type && fileData.type !== true) {
       this.tasoShell.cd = fileData.fullPath;
       return this.nullResult;
     }
-    const resultMap: Map<undefined | null | boolean, string> = new Map([
-      [undefined, errorMessages.NoFile(argv[0], argv[1])],
-      [null, errorMessages.PermissionDenied(argv[0], argv[1])],
-      [true, errorMessages.NotDir(argv[0], argv[1])],
-      [false, errorMessages.NotDir(argv[0], argv[1])]
-    ]);
-    result.data = resultMap.get(fileData.type) || '';
+    result.data = getErrorMessage(fileData.type, argv[0], argv[1]);
     return result;
   }
 
@@ -96,11 +111,7 @@ export class TasoKernel {
         errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
         return errorResult;
     }
-    const resultMap: Map<undefined | null, string> = new Map([
-      [undefined, errorMessages.NoFile(argv[0], argv[1])],
-      [null, errorMessages.PermissionDenied(argv[0], argv[1])]
-    ]);
-    errorResult.data = resultMap.get(fileData.type) || '';
+    errorResult.data = getErrorMessage(fileData.type, argv[0], argv[1]);
     return errorResult;
   }
 
@@ -114,6 +125,42 @@ export class TasoKernel {
       return result;
     }
     result.data = String(new Date());
+    return result;
+  }
+
+  async cat(argv: string[]): Promise<Result> {
+    const result: Result = {
+      type: 'text',
+      data: ''
+    };
+    switch (argv.length) {
+      case 1:
+        result.data = errorMessages.MissingFile(argv[0]);
+        return result;
+      case 2:
+        break;
+      default:
+        result.data = errorMessages.TooManyArgs(argv[0]);
+        return result;
+    }
+
+    const fileData = this.tasoShell.getFullPath(argv[1]);
+    if (fileData.type !== true) {
+      result.data = getErrorMessage(fileData.type, argv[0], argv[1]);
+      return result;
+    }
+
+    const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
+    if (repoFilePath) {
+      result.data = await fetch(`https://api.github.com/repos/taso0096/yamatsumi/contents/${repoFilePath}`)
+        .then(res => res.json())
+        .then(json => atob(json.content))
+        .catch(() => errorMessages.Error(argv[0]));
+    } else {
+      result.data = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(fileData.fullPath.slice(1))}?alt=media`)
+        .then(res => res.text())
+        .catch(() => errorMessages.Error(argv[0]));
+    }
     return result;
   }
 }

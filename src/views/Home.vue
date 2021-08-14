@@ -8,9 +8,13 @@
         :cd="data.cd"
         :cmd="data.cmd"
       />
-      <cmd-result :result="tasoShell.results[i]" />
+      <cmd-result
+        v-if="tasoShell.results[i]"
+        :result="tasoShell.results[i]"
+      />
     </div>
     <cmd-line
+      v-if="!tasoShell.history.length || tasoShell.results[tasoShell.history.length - 1]"
       ref="cmdLineRef"
       :cd="tasoShell.getCdName()"
     />
@@ -42,15 +46,18 @@ export default defineComponent({
     };
 
     const getInput = async() => {
+      nextTick(() => focusInput());
       const cmd = await cmdLineRef.value.input();
-      tasoShell.execCmd(cmd);
-      getInput();
-      nextTick(() => window.scroll(0, document.documentElement.scrollHeight - window.innerHeight));
+      await tasoShell.execCmd(cmd);
+      nextTick(() => {
+        getInput();
+        window.scroll(0, document.documentElement.scrollHeight - window.innerHeight);
+      });
     };
 
     const focusInput = () => {
       if (!String(document.getSelection()).length) {
-        cmdLineRef.value.inputRef.focus();
+        nextTick(() => cmdLineRef.value.inputRef.focus());
       }
     };
 
