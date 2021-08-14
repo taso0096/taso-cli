@@ -12,7 +12,7 @@ export interface DirObject {
 }
 
 export const getRootDir = async(parentRef: firebase.storage.Reference): Promise<DirObject> => {
-  const rootDir = {};
+  const rootDir = { '.': {}, '..': {} };
   await getStorageDir(rootDir, parentRef);
   return rootDir;
 };
@@ -22,7 +22,7 @@ const getStorageDir = async(parentDir: DirObject, parentRef: firebase.storage.Re
     .then(async res => {
       for (const dirRef of res.prefixes) {
         const dirData = dirRef.name.split(':');
-        parentDir[dirData[0]] = dirData[1] ?? true ? {} : null;
+        parentDir[dirData[0]] = dirData[1] ?? true ? { '.': {}, '..': {} } : null;
         if (parentDir[dirData[0]]) {
           await getStorageDir(parentDir[dirData[0]], dirRef);
         }
@@ -57,7 +57,7 @@ const getShaDir = async(parentDir: DirObject, user: string, repo: string, sha: s
   const dir: GitHubDir = await getShaTree(user, repo, sha);
   for (const file of dir) {
     const { path, type, sha } = file;
-    parentDir[path] = type === 'tree' ? {} : true;
+    parentDir[path] = type === 'tree' ? { '.': {}, '..': {} } : true;
     if (type === 'tree') {
       await new Promise(resolve => setTimeout(resolve, 1000));
       await getShaDir(parentDir[path], user, repo, sha);
