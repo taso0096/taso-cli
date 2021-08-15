@@ -5,17 +5,18 @@ interface ErrorMessages {
 }
 
 export const errorMessages: ErrorMessages = {
-  Error: cmd => `'${cmd}': An error has occurred`,
-  NoCmd: cmd => `'${cmd}': command not found`,
-  MissingFile: cmd => `'${cmd}': missing file operand`,
+  Error: cmd => `${cmd}: An error has occurred`,
+  NoCmd: cmd => `${cmd}: command not found`,
+  MissingFile: cmd => `${cmd}: missing file operand`,
   TooManyArgs: cmd => `${cmd}: too many arguments`,
+  FileFormat: cmd => `${cmd}: cannot use this file format`,
   PermissionDenied: (cmd, name) => `${cmd}: ${name}: Permission denied`,
   NoFile: (cmd, name) => `${cmd}: ${name}: No such file or directory`,
   NotDir: (cmd, name) => `${cmd}: ${name}: Not a directory`,
   IsDir: (cmd, name) => `${cmd}: ${name}: Is a directory`
 };
 
-const getErrorMessage = (type: FileType, cmd: string, name: string): string => {
+const getFileTypeError = (type: FileType, cmd: string, name: string): string => {
   switch (type) {
     case undefined:
       return errorMessages.NoFile(cmd, name);
@@ -24,7 +25,7 @@ const getErrorMessage = (type: FileType, cmd: string, name: string): string => {
     case true:
       return errorMessages.NotDir(cmd, name);
     case false:
-      if (['cat'].includes(cmd)) {
+      if (['cat', 'imgcat'].includes(cmd)) {
         return errorMessages.PermissionDenied(cmd, name);
       }
       return errorMessages.NotDir(cmd, name);
@@ -70,7 +71,7 @@ export class TasoKernel {
       this.tasoShell.cd = fileData.fullPath;
       return this.nullResult;
     }
-    result.data = getErrorMessage(fileData.type, argv[0], argv[1]);
+    result.data = getFileTypeError(fileData.type, argv[0], argv[1]);
     return result;
   }
 
@@ -111,7 +112,7 @@ export class TasoKernel {
         errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
         return errorResult;
     }
-    errorResult.data = getErrorMessage(fileData.type, argv[0], argv[1]);
+    errorResult.data = getFileTypeError(fileData.type, argv[0], argv[1]);
     return errorResult;
   }
 
@@ -146,13 +147,13 @@ export class TasoKernel {
 
     const fileData = this.tasoShell.getFullPath(argv[1]);
     if (fileData.type !== true) {
-      result.data = getErrorMessage(fileData.type, argv[0], argv[1]);
+      result.data = getFileTypeError(fileData.type, argv[0], argv[1]);
       return result;
     }
 
     const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
     if (repoFilePath) {
-      result.data = await fetch(`https://api.github.com/repos/taso0096/yamatsumi/contents/${repoFilePath}`)
+      result.data = await fetch(`https://api.github.com/repos/taso0096/${this.tasoShell.repo}/contents/${repoFilePath}`)
         .then(res => res.json())
         .then(json => atob(json.content))
         .catch(() => errorMessages.Error(argv[0]));
@@ -160,6 +161,48 @@ export class TasoKernel {
       result.data = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(fileData.fullPath.slice(1))}?alt=media`)
         .then(res => res.text())
         .catch(() => errorMessages.Error(argv[0]));
+    }
+    return result;
+  }
+
+  async imgcat(argv: string[]): Promise<Result> {
+    const errorResult: Result = {
+      type: 'text',
+      data: ''
+    };
+    switch (argv.length) {
+      case 1:
+        errorResult.data = errorMessages.MissingFile(argv[0]);
+        return errorResult;
+      case 2:
+        break;
+      default:
+        errorResult.data = errorMessages.TooManyArgs(argv[0]);
+        return errorResult;
+    }
+
+    const fileData = this.tasoShell.getFullPath(argv[1]);
+    if (fileData.type !== true) {
+      errorResult.data = getFileTypeError(fileData.type, argv[0], argv[1]);
+      return errorResult;
+    } else if (!['png', 'jpg', 'gif', 'ico'].includes(fileData.fullPath.split('/').slice(-1)[0].split('.').slice(-1)[0])) {
+      errorResult.data = errorMessages.FileFormat(argv[0]);
+      return errorResult;
+    }
+
+    const result: Result = {
+      type: 'img',
+      data: ''
+    };
+    const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
+    if (repoFilePath) {
+      const imageBlob = await fetch(`https://raw.githubusercontent.com/taso0096/${this.tasoShell.repo}/main/${repoFilePath}`)
+        .then(res => res.blob());
+      result.data = URL.createObjectURL(imageBlob);
+    } else {
+      const imageBlob = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(fileData.fullPath.slice(1))}?alt=media`)
+        .then(res => res.blob());
+      result.data = URL.createObjectURL(imageBlob);
     }
     return result;
   }

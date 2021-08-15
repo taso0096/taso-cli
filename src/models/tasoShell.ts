@@ -10,7 +10,7 @@ interface CmdData {
 }
 
 export interface Result {
-  type: 'text' | 'files' | null;
+  type: 'text' | 'files' | 'img' | null;
   data: string | string[] | null;
 }
 
@@ -128,6 +128,8 @@ export class TasoShell {
           return this.tasoKernel.date(argv);
         case 'cat':
           return this.tasoKernel.cat(argv);
+        case 'imgcat':
+          return this.tasoKernel.imgcat(argv);
         default:
           return {
             type: 'text',

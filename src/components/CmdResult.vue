@@ -15,6 +15,11 @@
         :class="file.slice(-1)[0] === '/' && 'blue--text'"
       >{{ file }}</div>
     </div>
+
+    <img
+      v-else-if="result.type === 'img'"
+      :src="result.data"
+    />
   </div>
 </template>
 
@@ -39,10 +44,14 @@
       margin-right: 3rem;
     }
   }
+  img {
+    max-width: 300px;
+    max-height: 300px;
+  }
 }
 </style>
 
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue';
 
 export default defineComponent({
