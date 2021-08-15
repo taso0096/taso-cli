@@ -10,6 +10,7 @@ export const errorMessages: ErrorMessages = {
   MissingFile: cmd => `${cmd}: missing file operand`,
   TooManyArgs: cmd => `${cmd}: too many arguments`,
   FileFormat: cmd => `${cmd}: cannot use this file format`,
+  InvalidOption: (cmd, name) => `${cmd}: ${name}: invalid option`,
   PermissionDenied: (cmd, name) => `${cmd}: ${name}: Permission denied`,
   NoFile: (cmd, name) => `${cmd}: ${name}: No such file or directory`,
   NotDir: (cmd, name) => `${cmd}: ${name}: Not a directory`,
@@ -55,28 +56,30 @@ export class TasoKernel {
       type: 'text',
       data: ''
     };
-    switch (argv.length) {
-      case 1:
+    const cmdArgv = argv.slice(1);
+    switch (cmdArgv.length) {
+      case 0:
         this.tasoShell.cd = this.tasoShell.homeDirFullPath;
         return this.nullResult;
-      case 2:
+      case 1:
         break;
       default:
         result.data = errorMessages.TooManyArgs(argv[0]);
         return result;
     }
 
-    const fileData = this.tasoShell.getFullPath(argv[1]);
+    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
     if (fileData.type && fileData.type !== true) {
       this.tasoShell.cd = fileData.fullPath;
       return this.nullResult;
     }
-    result.data = getFileTypeError(fileData.type, argv[0], argv[1]);
+    result.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
     return result;
   }
 
   pwd(argv: string[]): Result {
-    if (argv.length > 1) {
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 1) {
       return {
         type: 'text',
         data: errorMessages.TooManyArgs(argv[0])
@@ -93,27 +96,36 @@ export class TasoKernel {
       type: 'text',
       data: ''
     };
-    if (argv.length > 2) {
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 3) {
       errorResult.data = errorMessages.TooManyArgs(argv[0]);
       return errorResult;
     }
 
-    const fileData = this.tasoShell.getFullPath(argv[1] || this.tasoShell.cd);
-    switch (typeof fileData.type) {
-      case 'object':
-        if (fileData.type === null) {
-          break;
-        }
-        return {
-          type: 'files',
-          data: Object.entries(fileData.type).map(file => file[0] + (file[1] && file[1] !== true ? '/' : ''))
-        };
-      case 'boolean':
-        errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
-        return errorResult;
+    const fileName = cmdArgv.filter(v => !v.match(/^-/))[0];
+    const options = cmdArgv.filter(v => !!v.match(/^-/));
+    const invalidOption = options.filter(v => v !== '-a');
+    if (cmdArgv.length === 2 && !options.length) {
+      errorResult.data = errorMessages.TooManyArgs(argv[0]);
+      return errorResult;
+    } else if (invalidOption.length) {
+      errorResult.data = errorMessages.InvalidOption(argv[0], invalidOption[0]);
+      return errorResult;
     }
-    errorResult.data = getFileTypeError(fileData.type, argv[0], argv[1]);
-    return errorResult;
+
+    const fileData = this.tasoShell.getFullPath(fileName || this.tasoShell.cd);
+    if (!fileData.type && fileData.type !== false) {
+      errorResult.data = getFileTypeError(fileData.type, argv[0], fileName);
+      return errorResult;
+    } else if (typeof fileData.type === 'boolean') {
+      errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
+      return errorResult;
+    }
+    const resultFiles = Object.entries(fileData.type).map(file => file[0] + (file[1] && file[1] !== true ? '/' : ''));
+    return {
+      type: 'files',
+      data: options.includes('-a') ? resultFiles : resultFiles.filter(name => !name.match(/^\./))
+    };
   }
 
   date(argv: string[]): Result {
@@ -121,7 +133,8 @@ export class TasoKernel {
       type: 'text',
       data: ''
     };
-    if (argv.length > 1) {
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 1) {
       result.data = errorMessages.TooManyArgs(argv[0]);
       return result;
     }
@@ -134,20 +147,21 @@ export class TasoKernel {
       type: 'text',
       data: ''
     };
-    switch (argv.length) {
-      case 1:
+    const cmdArgv = argv.slice(1);
+    switch (cmdArgv.length) {
+      case 0:
         result.data = errorMessages.MissingFile(argv[0]);
         return result;
-      case 2:
+      case 1:
         break;
       default:
         result.data = errorMessages.TooManyArgs(argv[0]);
         return result;
     }
 
-    const fileData = this.tasoShell.getFullPath(argv[1]);
+    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
     if (fileData.type !== true) {
-      result.data = getFileTypeError(fileData.type, argv[0], argv[1]);
+      result.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
       return result;
     }
 
@@ -170,20 +184,21 @@ export class TasoKernel {
       type: 'text',
       data: ''
     };
-    switch (argv.length) {
-      case 1:
+    const cmdArgv = argv.slice(1);
+    switch (cmdArgv.length) {
+      case 0:
         errorResult.data = errorMessages.MissingFile(argv[0]);
         return errorResult;
-      case 2:
+      case 1:
         break;
       default:
         errorResult.data = errorMessages.TooManyArgs(argv[0]);
         return errorResult;
     }
 
-    const fileData = this.tasoShell.getFullPath(argv[1]);
+    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
     if (fileData.type !== true) {
-      errorResult.data = getFileTypeError(fileData.type, argv[0], argv[1]);
+      errorResult.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
       return errorResult;
     } else if (!['png', 'jpg', 'gif', 'ico'].includes(fileData.fullPath.split('/').slice(-1)[0].split('.').slice(-1)[0])) {
       errorResult.data = errorMessages.FileFormat(argv[0]);
