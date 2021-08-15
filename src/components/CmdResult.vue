@@ -52,13 +52,14 @@
 </style>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
+import { Result } from '@/models/tasoShell';
 
 export default defineComponent({
   name: 'CmdResult',
   props: {
     result: {
-      type: Object
+      type: Object as PropType<Result>
     }
   }
 });

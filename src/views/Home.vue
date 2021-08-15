@@ -36,16 +36,19 @@ export default defineComponent({
     CmdResult
   },
   setup() {
-    const cmdLineRef = ref();
+    const cmdLineRef = ref<InstanceType<typeof CmdLine>>();
     const tasoShell = reactive<TasoShell>(new TasoShell());
 
-    const bootBIOS = async() => {
+    const bootBIOS = async(): Promise<void> => {
       const tasoKernel = new TasoKernel(tasoShell);
       await tasoKernel.boot();
       getInput();
     };
 
-    const getInput = async() => {
+    const getInput = async(): Promise<void> => {
+      if (!cmdLineRef.value) {
+        return;
+      }
       nextTick(() => focusInput());
       const cmd = await cmdLineRef.value.input();
       await tasoShell.execCmd(cmd);
@@ -55,13 +58,17 @@ export default defineComponent({
       });
     };
 
-    const focusInput = () => {
+    const focusInput = (): void => {
       if (!String(document.getSelection()).length) {
-        nextTick(() => cmdLineRef.value.inputRef.focus());
+        nextTick(() => {
+          if (cmdLineRef.value?.inputRef) {
+            cmdLineRef.value.inputRef.focus();
+          }
+        });
       }
     };
 
-    onMounted(async() => {
+    onMounted(async(): Promise<void> => {
       await bootBIOS();
     });
 

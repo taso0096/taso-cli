@@ -46,8 +46,10 @@
 }
 </style>
 
-<script>
+<script lang="ts">
 import { defineComponent, ref } from 'vue';
+
+type Resolve = (value: string | PromiseLike<string>) => void;
 
 export default defineComponent({
   name: 'CmdLine',
@@ -60,25 +62,29 @@ export default defineComponent({
     }
   },
   setup() {
-    const inputRef = ref();
-    const inputResolve = ref(null);
-    const inputCmd = ref('');
+    const inputRef = ref<HTMLSpanElement>();
+    const inputResolve = ref<Resolve>();
+    const inputCmd = ref<string>('');
 
-    const input = () => {
+    const input = (): Promise<string> => {
       return new Promise(resolve => {
         inputResolve.value = resolve;
       });
     };
 
-    const syncInput = e => {
-      inputCmd.value = e.target.innerText;
+    const syncInput = (e: InputEvent): void => {
+      const input = e.target as HTMLInputElement;
+      inputCmd.value = input.innerText;
     };
 
-    const submitCmd = () => {
+    const submitCmd = (): void => {
+      if (!(inputRef.value && inputResolve.value)) {
+        return;
+      }
       inputResolve.value(inputRef.value.innerText);
       inputCmd.value = '';
       inputRef.value.innerText = '';
-      inputResolve.value = null;
+      inputResolve.value = undefined;
     };
 
     return {
