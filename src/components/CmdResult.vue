@@ -20,6 +20,19 @@
       v-else-if="result.type === 'img'"
       :src="result.data"
     />
+
+    <div
+      v-if="result.type === 'history'"
+      class="cmd-line__history"
+    >
+      <div
+        v-for="(history, i) in result.data"
+        :key="i"
+      >
+        <div class="cmd-line__history__index">{{ history[0] }}</div>
+        <div>{{ history[1] }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -47,6 +60,17 @@
   img {
     max-width: 300px;
     max-height: 300px;
+  }
+  .cmd-line__history {
+    > div {
+      display: flex;
+
+      .cmd-line__history__index {
+        min-width: 3rem;
+        margin-right: 1rem;
+        text-align: right;
+      }
+    }
   }
 }
 </style>

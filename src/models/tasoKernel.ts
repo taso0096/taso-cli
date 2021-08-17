@@ -221,4 +221,21 @@ export class TasoKernel {
     }
     return result;
   }
+
+  history(argv: string[]): Result {
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 1) {
+      return {
+        type: 'text',
+        data: errorMessages.TooManyArgs(argv[0])
+      };
+    }
+
+    const filteredHistory = this.tasoShell.history.filter(v => v.cmd);
+    const startIndex = filteredHistory.length - (filteredHistory.length < 10 ? filteredHistory.length : 10);
+    return {
+      type: 'history',
+      data: filteredHistory.slice(-11, -1).map((v, i) => [startIndex + i, v.cmd])
+    };
+  }
 }

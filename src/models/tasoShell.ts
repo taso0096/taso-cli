@@ -10,8 +10,8 @@ interface CmdData {
 }
 
 export interface Result {
-  type: 'text' | 'files' | 'img' | null;
-  data: string | string[] | null;
+  type: 'text' | 'files' | 'img' | 'history' | null;
+  data: string | string[] | (number | string)[][] | null;
 }
 
 export type FileType = undefined // 存在しない
@@ -130,6 +130,8 @@ export class TasoShell {
           return this.tasoKernel.cat(argv);
         case 'imgcat':
           return this.tasoKernel.imgcat(argv);
+        case 'history':
+          return this.tasoKernel.history(argv);
         default:
           return {
             type: 'text',
