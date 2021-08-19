@@ -8,13 +8,16 @@
     <span
       v-if="inputResolve"
       ref="inputRef"
-      @input="syncInput"
-      @keydown.enter.prevent="submitCmd"
       contenteditable
       class="cmd-line__input"
       :style="!inputCmd && {
         display: 'inline-block'
       }"
+      @input="syncInput"
+      @keydown.enter.prevent="submitCmd.text"
+      @keydown.up="submitCmd.key"
+      @keydown.down="submitCmd.key"
+      @keydown.ctrl.l="submitCmd.key"
     ></span>
     <span
       v-else
@@ -48,8 +51,9 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
+import { CmdData } from '@/models/tasoShell';
 
-type Resolve = (value: string | PromiseLike<string>) => void;
+type Resolve = (value: CmdData | PromiseLike<CmdData>) => void;
 
 export default defineComponent({
   name: 'CmdLine',
@@ -66,7 +70,7 @@ export default defineComponent({
     const inputResolve = ref<Resolve>();
     const inputCmd = ref<string>('');
 
-    const input = (): Promise<string> => {
+    const input = (): Promise<CmdData> => {
       return new Promise(resolve => {
         inputResolve.value = resolve;
       });
@@ -77,14 +81,27 @@ export default defineComponent({
       inputCmd.value = input.innerText;
     };
 
-    const submitCmd = (): void => {
-      if (!(inputRef.value && inputResolve.value)) {
-        return;
+    const submitCmd = {
+      text: (): void => {
+        if (!(inputRef.value && inputResolve.value)) {
+          return;
+        }
+        inputResolve.value({
+          type: 'text',
+          data: inputRef.value.innerText
+        } as CmdData);
+        inputCmd.value = '';
+        inputRef.value.innerText = '';
+        inputResolve.value = undefined;
+      },
+      key: (e: KeyboardEvent) => {
+        if (inputResolve.value) {
+          inputResolve.value({
+            type: 'key',
+            data: e.key
+          } as CmdData);
+        }
       }
-      inputResolve.value(inputRef.value.innerText);
-      inputCmd.value = '';
-      inputRef.value.innerText = '';
-      inputResolve.value = undefined;
     };
 
     return {

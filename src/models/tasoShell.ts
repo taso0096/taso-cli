@@ -4,9 +4,14 @@ import { DirObject, getRootDir, getRepoDir } from '@/models/makeDirTree';
 import firebase from 'firebase/app';
 import 'firebase/storage';
 
-interface CmdData {
+interface HistoryData {
   cd: string;
   cmd: string;
+}
+
+export interface CmdData {
+  type: 'text' | 'key',
+  data: string
 }
 
 export interface Result {
@@ -32,7 +37,7 @@ export class TasoShell {
   rootDir: DirObject;
   homeDirFullPath: string;
   cd: string;
-  history: CmdData[];
+  history: HistoryData[];
   results: Result[];
 
   repo: string;
@@ -49,7 +54,7 @@ export class TasoShell {
     this.results = [];
 
     this.repo = 'taso-cli';
-    this.allowGetRepo = true;
+    this.allowGetRepo = false;
   }
 
   async boot(tasoKernel: TasoKernel): Promise<void> {
@@ -103,20 +108,23 @@ export class TasoShell {
     return this.cd === this.homeDirFullPath ? '~' : this.cd.replace(regexp, '~/');
   }
 
-  async execCmd(cmd: string): Promise<void> {
+  async execCmd(cmd: CmdData): Promise<void> {
     if (!this.tasoKernel) {
+      return;
+    }
+    if (cmd.type === 'key') {
       return;
     }
     this.history.push({
       cd: this.getCdName(),
-      cmd
+      cmd: cmd.data
     });
-    if (!cmd) {
+    if (!cmd.data) {
       this.results.push(this.tasoKernel.nullResult);
       return;
     }
-    const result = await ((cmd: string): Promise<Result> | Result => {
-      const argv = cmd.split(/ +/).filter(v => v !== '');
+    const result = await ((cmdText: string): Promise<Result> | Result => {
+      const argv = cmdText.split(/ +/).filter(v => v !== '');
       switch (argv[0]) {
         case 'cd':
           return this.tasoKernel.cd(argv);
@@ -138,7 +146,7 @@ export class TasoShell {
             data: errorMessages.NoCmd(argv[0])
           };
       }
-    })(cmd.replace(/\u00a0/g, '\u0020')); // nbspを通常スペースに変換
+    })(cmd.data.replace(/\u00a0/g, '\u0020')); // nbspを通常スペースに変換
     this.results.push(result);
   }
 }
