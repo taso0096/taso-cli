@@ -12,13 +12,14 @@
       <div
         v-for="(file, i) in result.data"
         :key="i"
-        :class="file.slice(-1)[0] === '/' && 'blue--text'"
+        :class="file.slice(-1)[0] === '/' && 'purple--text'"
       >{{ file }}</div>
     </div>
 
     <img
       v-else-if="result.type === 'img'"
       :src="result.data"
+      :alt="result.data.split('/').slice(-1)[0]"
     />
 
     <div

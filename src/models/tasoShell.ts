@@ -74,7 +74,7 @@ export class TasoShell {
     }
   }
 
-  registerInputRef(inputRef: HTMLSpanElement) {
+  registerInputRef(inputRef: HTMLSpanElement): void {
     this.inputRef = inputRef;
   }
 

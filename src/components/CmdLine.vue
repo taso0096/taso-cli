@@ -2,7 +2,7 @@
   <div class="cmd-line">
     <span class="cmd-line__prompt">
       <span class="green--text">taso-cli</span>
-      <span class="blue--text">:{{ cd }}</span>
+      <span class="purple--text">:{{ cd }}</span>
       <span>$ </span>
     </span>
     <span
