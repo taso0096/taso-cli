@@ -36,13 +36,12 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
 };
 
 export class TasoKernel {
-  tasoShell: TasoShell;
+  tasoShell!: TasoShell;
   nullResult: Result;
   nowHistoryIndex: number;
   tmpCmd: string | null;
 
-  constructor(tasoShell: TasoShell) {
-    this.tasoShell = tasoShell;
+  constructor() {
     this.nullResult = {
       type: null,
       data: null
@@ -51,7 +50,8 @@ export class TasoKernel {
     this.tmpCmd = null;
   }
 
-  async boot(): Promise<void> {
+  async boot(tasoShell: TasoShell): Promise<void> {
+    this.tasoShell = tasoShell;
     await this.tasoShell.boot(this);
   }
 
@@ -81,7 +81,7 @@ export class TasoKernel {
     }
     switch (key) {
       case 'l':
-        console.log('l');
+        this.clear(['clear']);
     }
   }
 
@@ -271,5 +271,19 @@ export class TasoKernel {
       type: 'history',
       data: filteredHistory.slice(-11, -1).map((v, i) => [startIndex + i, v.cmd])
     };
+  }
+
+  clear(argv: string[]): Result {
+    const result: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 1) {
+      result.data = errorMessages.TooManyArgs(argv[0]);
+      return result;
+    }
+    this.tasoShell.historyStartIndex = this.tasoShell.history.length;
+    return this.nullResult;
   }
 }

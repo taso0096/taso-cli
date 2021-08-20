@@ -1,7 +1,7 @@
 <template>
   <div class="home" @click="focusInput">
     <div
-      v-for="(data, i) in tasoShell.history"
+      v-for="(data, i) in tasoShell.history.slice(tasoShell.historyStartIndex)"
       :key="i"
     >
       <cmd-line
@@ -9,8 +9,8 @@
         :cmd="data.cmd"
       />
       <cmd-result
-        v-if="tasoShell.results[i]"
-        :result="tasoShell.results[i]"
+        v-if="tasoShell.results[i + tasoShell.historyStartIndex]"
+        :result="tasoShell.results[i + tasoShell.historyStartIndex]"
       />
     </div>
     <cmd-line
@@ -40,8 +40,8 @@ export default defineComponent({
     const tasoShell = reactive<TasoShell>(new TasoShell());
 
     const bootBIOS = async(): Promise<void> => {
-      const tasoKernel = new TasoKernel(tasoShell);
-      await tasoKernel.boot();
+      const tasoKernel = new TasoKernel();
+      await tasoKernel.boot(tasoShell);
       getInput();
     };
 

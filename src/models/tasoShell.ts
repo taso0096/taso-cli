@@ -39,6 +39,7 @@ export class TasoShell {
   cd: string;
   history: HistoryData[];
   results: Result[];
+  historyStartIndex: number;
 
   repo: string;
   allowGetRepo: boolean;
@@ -54,6 +55,7 @@ export class TasoShell {
     this.cd = this.homeDirFullPath;
     this.history = [];
     this.results = [];
+    this.historyStartIndex = 0;
 
     this.repo = 'taso-cli';
     this.allowGetRepo = false;
@@ -148,6 +150,8 @@ export class TasoShell {
           return this.tasoKernel.imgcat(argv);
         case 'history':
           return this.tasoKernel.history(argv);
+        case 'clear':
+          return this.tasoKernel.clear(argv);
         default:
           return {
             type: 'text',
