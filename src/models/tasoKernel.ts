@@ -38,6 +38,8 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
 export class TasoKernel {
   tasoShell: TasoShell;
   nullResult: Result;
+  nowHistoryIndex: number;
+  tmpCmd: string | null;
 
   constructor(tasoShell: TasoShell) {
     this.tasoShell = tasoShell;
@@ -45,10 +47,42 @@ export class TasoKernel {
       type: null,
       data: null
     };
+    this.nowHistoryIndex = 0;
+    this.tmpCmd = null;
   }
 
   async boot(): Promise<void> {
     await this.tasoShell.boot(this);
+  }
+
+  keyInput(key: string): void {
+    if (key.length !== 1) {
+      const addIndex = key === 'ArrowUp' ? -1 : 1;
+      const filteredHistory = this.tasoShell.history.map(history => history.cmd).filter(cmd => cmd);
+      if (this.tmpCmd === null) {
+        if (addIndex >= 0 || !filteredHistory.length) {
+          return;
+        }
+        this.tmpCmd = this.tasoShell.inputRef.innerText;
+        this.nowHistoryIndex = filteredHistory.length - 1;
+      } else {
+        const nextIndex = this.nowHistoryIndex + addIndex;
+        if (nextIndex < 0) {
+          return;
+        } else if (nextIndex > filteredHistory.length - 1) {
+          this.tasoShell.inputRef.innerText = this.tmpCmd;
+          this.tmpCmd = null;
+          return;
+        }
+        this.nowHistoryIndex += addIndex;
+      }
+      this.tasoShell.inputRef.innerText = filteredHistory[this.nowHistoryIndex];
+      return;
+    }
+    switch (key) {
+      case 'l':
+        console.log('l');
+    }
   }
 
   cd(argv: string[]): Result {

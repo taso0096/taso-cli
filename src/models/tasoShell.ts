@@ -43,6 +43,8 @@ export class TasoShell {
   repo: string;
   allowGetRepo: boolean;
 
+  inputRef!: HTMLSpanElement;
+
   constructor() {
     this.tasoKernel = null;
 
@@ -68,6 +70,10 @@ export class TasoShell {
       const repoDir = await getRepoDir(this.user, this.repo);
       userRepositories[this.repo] = repoDir;
     }
+  }
+
+  registerInputRef(inputRef: HTMLSpanElement) {
+    this.inputRef = inputRef;
   }
 
   getFullPath(path: string): FileData {
@@ -113,6 +119,7 @@ export class TasoShell {
       return;
     }
     if (cmd.type === 'key') {
+      this.tasoKernel.keyInput(cmd.data);
       return;
     }
     this.history.push({
@@ -123,6 +130,7 @@ export class TasoShell {
       this.results.push(this.tasoKernel.nullResult);
       return;
     }
+    this.tasoKernel.tmpCmd = null;
     const result = await ((cmdText: string): Promise<Result> | Result => {
       const argv = cmdText.split(/ +/).filter(v => v !== '');
       switch (argv[0]) {

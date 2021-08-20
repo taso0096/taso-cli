@@ -9,15 +9,16 @@
       v-if="inputResolve"
       ref="inputRef"
       contenteditable
+      spellcheck="false"
       class="cmd-line__input"
-      :style="!inputCmd && {
+      :style="!inputRef?.innerText && {
         display: 'inline-block'
       }"
       @input="syncInput"
       @keydown.enter.prevent="submitCmd.text"
-      @keydown.up="submitCmd.key"
-      @keydown.down="submitCmd.key"
-      @keydown.ctrl.l="submitCmd.key"
+      @keydown.up.prevent="submitCmd.key"
+      @keydown.down.prevent="submitCmd.key"
+      @keydown.ctrl.l.prevent="submitCmd.key"
     ></span>
     <span
       v-else
@@ -68,17 +69,11 @@ export default defineComponent({
   setup() {
     const inputRef = ref<HTMLSpanElement>();
     const inputResolve = ref<Resolve>();
-    const inputCmd = ref<string>('');
 
     const input = (): Promise<CmdData> => {
       return new Promise(resolve => {
         inputResolve.value = resolve;
       });
-    };
-
-    const syncInput = (e: InputEvent): void => {
-      const input = e.target as HTMLInputElement;
-      inputCmd.value = input.innerText;
     };
 
     const submitCmd = {
@@ -90,7 +85,6 @@ export default defineComponent({
           type: 'text',
           data: inputRef.value.innerText
         } as CmdData);
-        inputCmd.value = '';
         inputRef.value.innerText = '';
         inputResolve.value = undefined;
       },
@@ -107,9 +101,7 @@ export default defineComponent({
     return {
       inputRef,
       inputResolve,
-      inputCmd,
       input,
-      syncInput,
       submitCmd
     };
   }

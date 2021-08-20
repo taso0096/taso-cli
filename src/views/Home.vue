@@ -62,7 +62,18 @@ export default defineComponent({
       if (!String(document.getSelection()).length) {
         nextTick(() => {
           if (cmdLineRef.value?.inputRef) {
+            tasoShell.registerInputRef(cmdLineRef.value.inputRef);
             cmdLineRef.value.inputRef.focus();
+            const range = document.createRange();
+            const textNode = cmdLineRef.value?.inputRef?.childNodes[0];
+            if (textNode) {
+              range.setStart(textNode, textNode.textContent?.length || 0);
+              const sel = window.getSelection();
+              if (sel) {
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+            }
           }
         });
       }
