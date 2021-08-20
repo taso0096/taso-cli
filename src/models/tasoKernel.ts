@@ -155,7 +155,8 @@ export class TasoKernel {
       errorResult.data = fileData.fullPath.split('/').slice(-1)[0];
       return errorResult;
     }
-    const resultFiles = Object.entries(fileData.type).map(file => file[0] + (file[1] && file[1] !== true ? '/' : ''));
+    const isDir = (type: FileType) => (type && type !== true) || type === null;
+    const resultFiles = Object.entries(fileData.type).map(file => file[0] + (isDir(file[1]) ? '/' : ''));
     return {
       type: 'files',
       data: options.includes('-a') ? resultFiles : resultFiles.filter(name => !name.match(/^\./))
