@@ -26,3 +26,5 @@ pnpm-debug.log*
 firebaseConfig.ts
 .firebase
 .firebaserc
+firebase-debug.log
+ui-debug.log

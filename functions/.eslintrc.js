@@ -29,5 +29,6 @@ module.exports = {
     'semi': ['warn', 'always'],
     'prefer-promise-reject-errors': 0,
     'spaceInfixOps': 0,
+    'max-len': ['error', {'code': 150}],
   },
 };
