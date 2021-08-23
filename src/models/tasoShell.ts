@@ -46,13 +46,13 @@ export class TasoShell {
 
   inputRef!: HTMLSpanElement;
 
-  constructor() {
+  constructor(path: string) {
     this.tasoKernel = null;
 
     this.user = 'taso0096';
     this.rootDir = {};
     this.homeDirFullPath = `/home/${this.user}`;
-    this.cd = this.homeDirFullPath;
+    this.cd = path || this.homeDirFullPath;
     this.history = [];
     this.results = [];
     this.historyStartIndex = 0;

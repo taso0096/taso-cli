@@ -13,7 +13,7 @@
       },
       {
         "source": "**",
-        "function": "generateOGP"
+        "function": "getOgpHtml"
       }
     ],
     "headers": [

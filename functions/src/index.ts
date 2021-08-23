@@ -51,15 +51,15 @@ const generateOgpHtml = (pwd: string, imageUrl: string): string => `
   </head>
   <body>
     <script>
-      // location.href = 'https://cli.taso.tech';
+      location.href = 'https://cli.taso.tech/?path=${pwd}';
     </script>
     <img src="${imageUrl}" />
   </body>
 </html>
 `;
 
-export const generateOGP = functions
-    .region('asia-northeast1')
+export const getOgpHtml = functions
+    .region('us-central1')
     .runWith({
       timeoutSeconds: 10,
       memory: '512MB',

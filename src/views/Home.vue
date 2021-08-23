@@ -22,7 +22,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, onMounted, nextTick } from 'vue';
+import { defineComponent, ref, reactive, onMounted, nextTick, watchEffect } from 'vue';
+import { useRouter } from 'vue-router';
+
 import CmdLine from '@/components/CmdLine.vue';
 import CmdResult from '@/components/CmdResult.vue';
 
@@ -36,8 +38,10 @@ export default defineComponent({
     CmdResult
   },
   setup() {
+    const router = useRouter();
+
     const cmdLineRef = ref<InstanceType<typeof CmdLine>>();
-    const tasoShell = reactive<TasoShell>(new TasoShell());
+    const tasoShell = reactive<TasoShell>(new TasoShell(router.currentRoute.value.query.path as string));
 
     const bootBIOS = async(): Promise<void> => {
       const tasoKernel = new TasoKernel();
@@ -81,6 +85,12 @@ export default defineComponent({
 
     onMounted(async(): Promise<void> => {
       await bootBIOS();
+    });
+
+    watchEffect(() => {
+      router.push({
+        path: tasoShell.cd
+      });
     });
 
     return {
