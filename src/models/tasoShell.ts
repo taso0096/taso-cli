@@ -99,10 +99,15 @@ export class TasoShell {
     }, []);
 
     const file: FileType = trimPath.reduce((dir, key) => {
-      if (dir && dir[key] !== undefined) {
+      if (!dir) {
+        return dir;
+      }
+      if (dir[key] !== undefined) {
+        if (dir[key][':']) {
+          return null;
+        }
         return dir[key];
       }
-      return undefined;
     }, this.rootDir);
 
     return {
