@@ -46,7 +46,6 @@ export default defineComponent({
     const bootBIOS = async(): Promise<void> => {
       const tasoKernel = new TasoKernel();
       await tasoKernel.boot(tasoShell);
-      getInput();
     };
 
     const getInput = async(): Promise<void> => {
@@ -85,11 +84,23 @@ export default defineComponent({
 
     onMounted(async(): Promise<void> => {
       await bootBIOS();
+      const cmd = router.currentRoute.value.query.cmd;
+      if (cmd) {
+        await tasoShell.execCmd({
+          type: 'text',
+          data: cmd as string
+        });
+      }
+      await router.push({
+        path: tasoShell.cd
+      });
+      getInput();
     });
 
     watchEffect(() => {
       router.push({
-        path: tasoShell.cd
+        path: tasoShell.cd,
+        query: router.currentRoute.value.query
       });
     });
 
