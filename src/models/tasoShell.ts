@@ -152,6 +152,8 @@ export class TasoShell {
           return this.tasoKernel.history(argv);
         case 'clear':
           return this.tasoKernel.clear(argv);
+        case 'taso-cli':
+          return this.tasoKernel.tasoCli(argv);
         default:
           return {
             type: 'text',

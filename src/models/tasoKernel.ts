@@ -1,5 +1,8 @@
 import { TasoShell, Result, FileType } from '@/models/tasoShell';
 
+import firebase from 'firebase/app';
+import 'firebase/auth';
+
 interface ErrorMessages {
   [key: string]: (cmd: string, name?: string) => string
 }
@@ -286,5 +289,88 @@ export class TasoKernel {
     }
     this.tasoShell.historyStartIndex = this.tasoShell.history.length;
     return this.nullResult;
+  }
+
+  async tasoCli(argv: string[]): Promise<Result> {
+    const errorResult: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length === 0) {
+      errorResult.data = errorMessages.InvalidOption(argv[0]);
+      return errorResult;
+    } else if (cmdArgv.length >= 4) {
+      errorResult.data = errorMessages.TooManyArgs(argv[0]);
+      return errorResult;
+    }
+
+    switch (cmdArgv[0]) {
+      case 'login':
+        return {
+          type: 'text',
+          data: await this.loginTasoCli(argv[0], cmdArgv[1], cmdArgv[2])
+        };
+      case 'logout':
+        return {
+          type: 'text',
+          data: await this.logoutTasoCli(argv[0])
+        };
+      case 'reset':
+        break;
+    }
+    errorResult.data = errorMessages.InvalidOption(argv[0], cmdArgv[0]);
+    return errorResult;
+  }
+
+  async loginTasoCli(cmd: string, option: string, email: string): Promise<string> {
+    const currentUserEmail = await firebase.auth().currentUser?.email;
+    if (currentUserEmail) {
+      return `${cmd}: Already logged in as ${currentUserEmail}`;
+    }
+    switch (option) {
+      case '--email':
+        if (!email) {
+          return errorMessages.InvalidOption(cmd);
+        }
+        const token = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(64)))).substring(0, 64);
+        return firebase.auth().sendSignInLinkToEmail(email, {
+          url: `https://cli.taso.tech?path=${this.tasoShell.cd}&cmd=${encodeURIComponent('taso-cli login')}&token=${token}`,
+          handleCodeInApp: true
+        })
+          .then(() => {
+            localStorage.setItem('loginEmail', email);
+            return `${cmd}: The login link was successfully sent.`;
+          })
+          .catch(() => errorMessages.Error(cmd));
+      case undefined:
+        if (!firebase.auth().isSignInWithEmailLink(window.location.href)) {
+          return errorMessages.Error(cmd);
+        }
+        const loginEmail = localStorage.getItem('loginEmail');
+        if (!loginEmail) {
+          return errorMessages.Error(cmd);
+        }
+        return firebase.auth().signInWithEmailLink(loginEmail, window.location.href)
+          .then(() => {
+            window.localStorage.removeItem('loginEmail');
+            return `${cmd}: Logged in as ${loginEmail}`;
+          })
+          .catch(() => errorMessages.Error(cmd));
+    }
+    return errorMessages.InvalidOption(cmd);
+  }
+
+  async logoutTasoCli(cmd: string): Promise<string> {
+    const currentUserEmail = await firebase.auth().currentUser?.email;
+    if (!currentUserEmail) {
+      return `${cmd}: No need to logout, not logged in`;
+    }
+    return firebase.auth().signOut()
+      .then(() => {
+        console.log();
+        return `${cmd}: Logged out from ${currentUserEmail}`;
+      })
+      .catch(() => errorMessages.Error(cmd));
   }
 }
