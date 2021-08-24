@@ -59,35 +59,84 @@ const generateOgpHtml = (pwd: string, imageUrl: string): string => `
 `;
 
 export const getOgpHtml = functions
-    .region('us-central1')
-    .runWith({
-      timeoutSeconds: 10,
-      memory: '512MB',
-    })
-    .https.onRequest(async(req, res) => {
-      const filePath = `${req.path.slice(1).replace(/\//g, '__').replace(/\./g, '-')}.png`;
-      const file = admin.storage().bucket().file(filePath);
-      const isExist = (await file.exists())[0];
-      if (isExist) {
-        res.send(generateOgpHtml(req.path, `https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/${filePath}?alt=media`));
-        return;
-      }
+  .region('us-central1')
+  .runWith({
+    timeoutSeconds: 10,
+    memory: '512MB',
+  })
+  .https.onRequest(async(req, res) => {
+    const filePath = `${req.path.slice(1).replace(/\//g, '__').replace(/\./g, '-')}.png`;
+    const file = admin.storage().bucket().file(filePath);
+    const isExist = (await file.exists())[0];
+    if (isExist) {
+      res.send(generateOgpHtml(req.path, `https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/${filePath}?alt=media`));
+      return;
+    }
 
-      const browser = await puppeteer.launch();
-      const page = await browser.newPage();
-      await page.goto(`data:text/html,${encodeURIComponent(generateCliHtml(req.path).trim())}`, {
-        waitUntil: 'networkidle0',
-      });
-      const tasoCli = await page.$('#taso-cli');
-      const imageBuffer = await tasoCli?.screenshot();
-      if (!imageBuffer || typeof imageBuffer === 'string') {
-        res.send(generateOgpHtml(req.path, 'https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/DEFAULT__IMAGE.png?alt=media'));
-        return;
-      }
-
-      const resImagePath = await file.save(imageBuffer)
-          .then(() => filePath)
-          .catch(() => 'DEFAULT__IMAGE.png');
-
-      res.send(generateOgpHtml(req.path, `https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/${resImagePath}?alt=media`));
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto(`data:text/html,${encodeURIComponent(generateCliHtml(req.path).trim())}`, {
+      waitUntil: 'networkidle0',
     });
+    const tasoCli = await page.$('#taso-cli');
+    const imageBuffer = await tasoCli?.screenshot();
+    if (!imageBuffer || typeof imageBuffer === 'string') {
+      res.send(generateOgpHtml(req.path, 'https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/DEFAULT__IMAGE.png?alt=media'));
+      return;
+    }
+
+    const resImagePath = await file.save(imageBuffer)
+      .then(() => filePath)
+      .catch(() => 'DEFAULT__IMAGE.png');
+
+    res.send(generateOgpHtml(req.path, `https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/${resImagePath}?alt=media`));
+  });
+
+export const addAdminClaim = functions
+  .region('asia-northeast1')
+  .runWith({
+    memory: '128MB',
+  })
+  .firestore.document('admin_users/{docID}').onCreate((snap) => {
+    const user = snap.data();
+    if (!user.uid) {
+      return;
+    }
+    modifyAdmin(user.uid, true);
+  });
+
+export const removeAdminClaim = functions
+  .region('asia-northeast1')
+  .runWith({
+    memory: '128MB',
+  })
+  .firestore.document('admin_users/{docID}').onDelete((snap) => {
+    const user = snap.data();
+    if (!user.uid) {
+      return;
+    }
+    modifyAdmin(user.uid, false);
+  });
+
+const modifyAdmin = (uid: string, isAdmin: boolean) => {
+  admin.auth().setCustomUserClaims(uid, {admin: isAdmin});
+};
+
+export const resetTasoCli = functions
+  .region('asia-northeast1')
+  .https.onCall(async(data, context): Promise<{ status: string }> => {
+    if (!context.auth) {
+      return { status: 'error' };
+    }
+    const isAdmin = await admin.auth().getUser(context.auth.uid)
+      .then(user => user.customClaims?.admin);
+    if (!isAdmin) {
+      return { status: 'error' };
+    }
+    const rootDirRef = admin.firestore().collection('settings').doc('rootDir');
+    rootDirRef.set({
+      data: data.rootDir,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    return { status: 'success' };
+  });

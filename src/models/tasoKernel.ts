@@ -2,6 +2,7 @@ import { TasoShell, Result, FileType } from '@/models/tasoShell';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
+import 'firebase/functions';
 
 interface ErrorMessages {
   [key: string]: (cmd: string, name?: string) => string
@@ -317,7 +318,10 @@ export class TasoKernel {
           data: await this.logoutTasoCli(argv[0])
         };
       case 'reset':
-        break;
+        return {
+          type: 'text',
+          data: await this.resetTasoCli(argv[0])
+        };
     }
     errorResult.data = errorMessages.InvalidOption(argv[0], cmdArgv[0]);
     return errorResult;
@@ -370,6 +374,23 @@ export class TasoKernel {
       .then(() => {
         console.log();
         return `${cmd}: Logged out from ${currentUserEmail}`;
+      })
+      .catch(() => errorMessages.Error(cmd));
+  }
+
+  async resetTasoCli(cmd: string): Promise<string> {
+    const currentUser = await firebase.auth().currentUser;
+    if (!currentUser) {
+      return errorMessages.Error(cmd);
+    }
+    const functions = firebase.app().functions('asia-northeast1');
+    const resetTasoCli = functions.httpsCallable('resetTasoCli');
+    return resetTasoCli({ rootDir: this.tasoShell.rootDir })
+      .then(res => {
+        if (res.data.status === 'error') {
+          return errorMessages.Error(cmd);
+        }
+        return `${cmd}: OGP image has started generating.`;
       })
       .catch(() => errorMessages.Error(cmd));
   }

@@ -30,5 +30,6 @@ module.exports = {
     'prefer-promise-reject-errors': 0,
     'spaceInfixOps': 0,
     'max-len': ['error', {'code': 150}],
+    'indent': ['error', 2],
   },
 };
