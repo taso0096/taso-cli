@@ -40,6 +40,8 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
   }
 };
 
+export const isImage = (extension: string) => ['png', 'jpg', 'gif', 'ico'].includes(extension);
+
 export class TasoKernel {
   tasoShell!: TasoShell;
   nullResult: Result;
@@ -240,7 +242,7 @@ export class TasoKernel {
     if (fileData.type !== true) {
       errorResult.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
       return errorResult;
-    } else if (!['png', 'jpg', 'gif', 'ico'].includes(fileData.fullPath.split('/').slice(-1)[0].split('.').slice(-1)[0])) {
+    } else if (!isImage(fileData.fullPath.split('/').slice(-1)[0].split('.').slice(-1)[0])) {
       errorResult.data = errorMessages.FileFormat(argv[0]);
       return errorResult;
     }

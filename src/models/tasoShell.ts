@@ -1,4 +1,4 @@
-import { TasoKernel, errorMessages } from '@/models/tasoKernel';
+import { TasoKernel, errorMessages, isImage } from '@/models/tasoKernel';
 import { DirObject } from '@/models/makeDirTree';
 
 import firebase from 'firebase/app';
@@ -69,6 +69,28 @@ export class TasoShell {
     const defaultRootDir: DirObject = { home: {} };
     defaultRootDir[this.user] = {};
     this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
+
+    const cdData = this.getFullPath(this.cd);
+    const fileName = this.cd.split('/').slice(-1)[0];
+    if (!cdData.type) {
+      this.cd = this.homeDirFullPath;
+      if (!fileName.match(/\./)) {
+        await this.execCmd({
+          type: 'text',
+          data: `cd ${cdData.fullPath}`
+        });
+        return;
+      }
+    }
+    if (cdData.type && cdData.type !== true) {
+      return;
+    } else if (cdData.type) {
+      this.cd = this.getFullPath('..').fullPath;
+    }
+    await this.execCmd({
+      type: 'text',
+      data: `${isImage(fileName.split('.').slice(-1)[0]) ? 'imgcat' : 'cat'} ${cdData.type ? fileName : cdData.fullPath}`
+    });
   }
 
   registerInputRef(inputRef: HTMLSpanElement): void {
