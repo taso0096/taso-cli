@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin';
 const serviceAccount = require('./serviceAccountKey.json');
 
 import * as puppeteer from 'puppeteer';
+import * as sharp from 'sharp';
 import fetch from 'node-fetch';
 
 admin.initializeApp({
@@ -220,16 +221,18 @@ export const onUpdateRootDir = functions
         waitUntil: 'networkidle0',
       });
       const tasoCli = await page.$('#taso-cli');
-      const imageBuffer = await tasoCli?.screenshot();
-      if (imageBuffer && typeof imageBuffer !== 'string') {
-        const fileRef = admin.storage().bucket('taso-cli--ogp').file(getOgpImageName(ogp.path, ogp.cmd));
-        await fileRef.save(imageBuffer)
-          .catch();
+      const pngBuffer = await tasoCli?.screenshot();
+      if (pngBuffer && typeof pngBuffer !== 'string') {
+        const webpBuffer = await sharp(pngBuffer).webp().toBuffer().catch();
+        if (webpBuffer) {
+          const fileRef = admin.storage().bucket('taso-cli--ogp').file(getOgpImageName(ogp.path, ogp.cmd));
+          await fileRef.save(webpBuffer).catch();
+        }
       }
     }
   });
 
-const getOgpImageName = (path: string, cmd: string) => `${path.slice(1).replace(/\//g, '__').replace(/\./g, '-')}:${cmd.replace(/ /g, '_')}.png`;
+const getOgpImageName = (path: string, cmd: string) => `${path.slice(1).replace(/\//g, '__').replace(/\./g, '-')}:${cmd.replace(/ /g, '_')}.webp`;
 
 const getFileType = (rootDir: any, pathStack: string[]) => {
   return pathStack.reduce((dir, key) => {
