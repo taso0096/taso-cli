@@ -14,7 +14,7 @@ admin.initializeApp({
 const generateCliHtml = (cmd: string, el: string): string => `
 <div id="taso-cli" style="width: 400px; height: 209px; background: #000;">
   <div style="padding: 0.8rem;">
-    <div style="white-space: nowrap;"><span class="green--text">taso-cli</span><span class="purple--text">:</span>$ ${cmd}</div>
+    <div style="white-space: nowrap;"><span class="green--text">taso-cli</span><span class="purple--text">:</span>$ ${escapeHtml(cmd)}</div>
     ${el}
   </div>
 </div>
@@ -48,33 +48,37 @@ const generateCliHtml = (cmd: string, el: string): string => `
 </style>
 `;
 
-const generateOgpHtml = (path: string, cmd: string, imageUrl: string): string => `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>taso-cli:${path}</title>
-    <meta name="description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!">
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cli.taso.tech" />
-    <meta property="og:title" content="taso-cli:${path}" />
-    <meta property="og:description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!" />
-    <meta property="og:image" content="${imageUrl}" />
+const generateOgpHtml = (path: string, cmd: string, imageUrl: string): string => {
+  const escapedPath = escapeHtml(path);
+  const escapedCmd = escapeHtml(cmd);
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="utf-8">
+      <title>taso-cli:${escapedPath}</title>
+      <meta name="description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!">
+      <meta property="og:type" content="website" />
+      <meta property="og:url" content="https://cli.taso.tech" />
+      <meta property="og:title" content="taso-cli:${escapedPath}" />
+      <meta property="og:description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!" />
+      <meta property="og:image" content="${imageUrl}" />
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@taso0096">
-    <meta name="twitter:title" content="taso-cli:${path}">
-    <meta name="twitter:description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!">
-    <meta name="twitter:image" content="${imageUrl}">
-  </head>
-  <body>
-    <script>
-      location.href = 'https://cli.taso.tech/?path=${path}&cmd=${cmd}';
-    </script>
-    <img src="${imageUrl}" />
-  </body>
-</html>
-`;
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:site" content="@taso0096">
+      <meta name="twitter:title" content="taso-cli:${escapedPath}">
+      <meta name="twitter:description" content="This is taso0096's portfolio.\nEnjoy the CLI simulation!">
+      <meta name="twitter:image" content="${imageUrl}">
+    </head>
+    <body>
+      <script>
+        location.href = 'https://cli.taso.tech/?path=${escapedPath}&cmd=${escapedCmd}';
+      </script>
+      <img src="${imageUrl}" />
+    </body>
+  </html>
+  `;
+};
 
 export const getOgpHtml = functions
   .region('us-central1')
@@ -88,27 +92,33 @@ export const getOgpHtml = functions
       .then((doc) => doc.data()?.data)
       .catch(() => undefined);
     if (!rootDirText) { // Firestoreにデータがない場合
-      res.send(generateOgpHtml(req.path, '', getOgpImageUrl('home__taso0096:ls.png')));
+      res.send(generateOgpHtml(req.path, '', getOgpImageUrl('home__taso0096:ls.webp')));
       return;
     }
     const rootDir = JSON.parse(rootDirText);
-    const pathStack = req.path.slice(1).replace(/\/$/, '').split('/');
+    const pathStack = req.path.slice(1).replace(/^~/, 'home/taso0096').replace(/\/$/, '').split('/');
     const fileType = getFileType(rootDir, pathStack);
-    if (!fileType) { // 指定されたパスがない場合
-      res.send(generateOgpHtml(req.path, '', getOgpImageUrl('home__taso0096:ls.png')));
+    const trimPath = req.path.replace(/^\/home\/taso0096/, '~');
+    if (fileType === undefined) { // 指定されたパスがない場合
+      res.send(generateOgpHtml(trimPath, '', getOgpImageUrl('NO_FILE:***.webp')));
+      return;
+    } else if (trimPath.match(/^~\/repositories/)) { // リポジトリを指定した場合
+      res.send(generateOgpHtml(trimPath, '', getOgpImageUrl('CANNOT_OPEN_REPO:***.webp')));
       return;
     }
 
-    const queryCmd = req.query.cmd as string;
-    const cmd = queryCmd || (typeof fileType !== 'boolean' ? 'ls' : isImage(pathStack.slice(-1)[0].split('.').slice(-1)[0]) ? 'imgcat' : 'cat');
+    const queryCmd = req.query.cmd as string || '';
+    const canExecOgp = ['ls', 'ls -a', 'cat', 'imgcat'].includes(queryCmd);
+    const extention = pathStack.slice(-1)[0].split('.').slice(-1)[0];
+    const cmd = canExecOgp ? queryCmd : typeof fileType !== 'boolean' ? 'ls' : isImage(extention) ? 'imgcat' : 'cat';
     const filePath = getOgpImageName(req.path, cmd);
     const file = admin.storage().bucket('taso-cli--ogp').file(filePath);
     const isExist = (await file.exists())[0];
     if (!isExist) { // OGP画像が存在しない場合
-      res.send(generateOgpHtml(req.path, '', getOgpImageUrl('home__taso0096:ls.png')));
+      res.send(generateOgpHtml(trimPath, queryCmd, getOgpImageUrl('home__taso0096:ls.webp')));
       return;
     }
-    res.send(generateOgpHtml(req.path, !queryCmd && cmd === 'ls' ? '' : cmd, getOgpImageUrl(filePath)));
+    res.send(generateOgpHtml(trimPath, queryCmd, getOgpImageUrl(filePath)));
   });
 
 export const addAdminClaim = functions
@@ -202,7 +212,7 @@ export const onUpdateRootDir = functions
         </div>
         `;
         ogpList.push({
-          cmd: 'la -a',
+          cmd: 'ls -a',
           path: '/' + pathStack.join('/'),
           html: generateCliHtml('ls -a', allEl),
         });
@@ -213,6 +223,16 @@ export const onUpdateRootDir = functions
         });
       }
     }
+    ogpList.push({
+      cmd: '***',
+      path: '/NO_FILE',
+      html: generateCliHtml('***', '<div style="white-space: pre;">***: ***: No such file or directory</div>'),
+    });
+    ogpList.push({
+      cmd: '***',
+      path: '/CANNOT_OPEN_REPO',
+      html: generateCliHtml('***', '<div style="white-space: pre;">***: cannot open repository in OGP</div>'),
+    });
 
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -246,3 +266,12 @@ const getFileType = (rootDir: any, pathStack: string[]) => {
 const isImage = (extension: string) => ['png', 'jpg', 'gif', 'ico'].includes(extension);
 
 const getOgpImageUrl = (path: string) => `https://firebasestorage.googleapis.com/v0/b/taso-cli--ogp/o/${path}?alt=media`;
+
+const escapeHtml = (str: string): string => {
+  return str.replace(/&/g, '&amp;')
+    .replace(/>/g, '&gt;')
+    .replace(/</g, '&lt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/`/g, '&#x60;');
+};
