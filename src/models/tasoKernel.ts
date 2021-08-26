@@ -40,7 +40,7 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
   }
 };
 
-export const isImage = (extension: string) => ['png', 'jpg', 'gif', 'ico'].includes(extension);
+export const isImage = (extension: string): boolean => ['png', 'jpg', 'gif', 'ico'].includes(extension);
 
 export class TasoKernel {
   tasoShell!: TasoShell;
@@ -336,7 +336,7 @@ export class TasoKernel {
       return `${cmd}: Already logged in as ${currentUserEmail}`;
     }
     switch (option) {
-      case '--email':
+      case '--email': {
         if (!email) {
           return errorMessages.InvalidOption(cmd);
         }
@@ -350,7 +350,8 @@ export class TasoKernel {
             return `${cmd}: The login link was successfully sent.`;
           })
           .catch(() => errorMessages.Error(cmd));
-      case undefined:
+      }
+      case undefined: {
         if (!firebase.auth().isSignInWithEmailLink(window.location.href)) {
           return errorMessages.Error(cmd);
         }
@@ -364,6 +365,7 @@ export class TasoKernel {
             return `${cmd}: Logged in as ${loginEmail}`;
           })
           .catch(() => errorMessages.Error(cmd));
+      }
     }
     return errorMessages.InvalidOption(cmd);
   }

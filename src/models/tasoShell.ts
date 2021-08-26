@@ -67,7 +67,7 @@ export class TasoShell {
       .then(doc => doc.data()?.data)
       .catch(() => undefined);
     const defaultRootDir: DirObject = { home: {} };
-    defaultRootDir[this.user] = {};
+    defaultRootDir.home[this.user] = {};
     this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
 
     const cdData = this.getFullPath(this.cd);
@@ -82,6 +82,7 @@ export class TasoShell {
         return;
       }
     }
+    this.cd = cdData.fullPath;
     if (cdData.type && cdData.type !== true) {
       return;
     } else if (cdData.type) {
