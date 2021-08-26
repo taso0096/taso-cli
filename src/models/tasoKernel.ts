@@ -2,7 +2,7 @@ import { TasoShell, Result, FileType } from '@/models/tasoShell';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
-import 'firebase/functions';
+import 'firebase/firestore';
 
 interface ErrorMessages {
   [key: string]: (cmd: string, name?: string) => string
@@ -383,14 +383,13 @@ export class TasoKernel {
     if (!currentUser) {
       return errorMessages.Error(cmd);
     }
-    const functions = firebase.app().functions('asia-northeast1');
-    const resetTasoCli = functions.httpsCallable('resetTasoCli');
-    return resetTasoCli({ rootDir: this.tasoShell.rootDir })
-      .then(res => {
-        if (res.data.status === 'error') {
-          return errorMessages.Error(cmd);
-        }
-        return `${cmd}: OGP image has started generating.`;
+    const settingsRef = firebase.firestore().collection('settings');
+    return settingsRef.doc('rootDir').set({
+      data: JSON.stringify(this.tasoShell.rootDir),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+      .then(() => {
+        return `${cmd}: Directory tree has been updated. OGP image generation started.`;
       })
       .catch(() => errorMessages.Error(cmd));
   }
