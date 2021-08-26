@@ -1,4 +1,5 @@
 import { TasoShell, Result, FileType } from '@/models/tasoShell';
+import { getRootDir, getRepoDir } from '@/models/makeDirTree';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -382,6 +383,14 @@ export class TasoKernel {
     const currentUser = await firebase.auth().currentUser;
     if (!currentUser) {
       return errorMessages.Error(cmd);
+    }
+    const storageRef = firebase.storage().ref();
+    const rootRef = storageRef.child('/');
+    this.tasoShell.rootDir = await getRootDir(rootRef);
+    const userRepositories = this.tasoShell.getFullPath('~/repositories').type;
+    if (userRepositories && userRepositories !== true) {
+      const repoDir = await getRepoDir(this.tasoShell.user, this.tasoShell.repo);
+      userRepositories[this.tasoShell.repo] = repoDir;
     }
     const settingsRef = firebase.firestore().collection('settings');
     return settingsRef.doc('rootDir').set({

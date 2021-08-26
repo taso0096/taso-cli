@@ -1,8 +1,9 @@
 import { TasoKernel, errorMessages } from '@/models/tasoKernel';
-import { DirObject, getRootDir, getRepoDir } from '@/models/makeDirTree';
+import { DirObject } from '@/models/makeDirTree';
 
 import firebase from 'firebase/app';
 import 'firebase/storage';
+import 'firebase/firestore';
 
 interface HistoryData {
   cd: string;
@@ -40,9 +41,7 @@ export class TasoShell {
   history: HistoryData[];
   results: Result[];
   historyStartIndex: number;
-
   repo: string;
-  allowGetRepo: boolean;
 
   inputRef!: HTMLSpanElement;
 
@@ -58,20 +57,18 @@ export class TasoShell {
     this.historyStartIndex = 0;
 
     this.repo = 'taso-cli';
-    this.allowGetRepo = false;
   }
 
   async boot(tasoKernel: TasoKernel): Promise<void> {
     this.tasoKernel = tasoKernel;
 
-    const storageRef = firebase.storage().ref();
-    const rootRef = storageRef.child('/');
-    this.rootDir = await getRootDir(rootRef);
-    const userRepositories = this.getFullPath('~/repositories').type;
-    if (this.allowGetRepo && userRepositories && userRepositories !== true) {
-      const repoDir = await getRepoDir(this.user, this.repo);
-      userRepositories[this.repo] = repoDir;
-    }
+    const rootDirRef = firebase.firestore().collection('settings').doc('rootDir');
+    const rootDirText = await rootDirRef.get()
+      .then(doc => doc.data()?.data)
+      .catch(() => undefined);
+    const defaultRootDir: DirObject = { home: {} };
+    defaultRootDir[this.user] = {};
+    this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
   }
 
   registerInputRef(inputRef: HTMLSpanElement): void {
