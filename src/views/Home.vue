@@ -28,8 +28,8 @@ import { useRouter } from 'vue-router';
 import CmdLine from '@/components/CmdLine.vue';
 import CmdResult from '@/components/CmdResult.vue';
 
-import { TasoKernel } from '@/models/tasoKernel';
-import { TasoShell } from '@/models/tasoShell';
+import { TasoKernel } from '@/tasoCli/kernel';
+import { TasoShell } from '@/tasoCli/shell';
 
 export default defineComponent({
   name: 'Home',
@@ -45,7 +45,7 @@ export default defineComponent({
 
     const bootBIOS = async(): Promise<void> => {
       const tasoKernel = new TasoKernel();
-      await tasoKernel.boot(tasoShell);
+      await tasoKernel.boot(tasoShell as TasoShell);
     };
 
     const getInput = async(): Promise<void> => {

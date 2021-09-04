@@ -78,7 +78,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Result } from '@/models/tasoShell';
+import { Result } from '@/tasoCli/shell';
 
 export default defineComponent({
   name: 'CmdResult',

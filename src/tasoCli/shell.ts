@@ -1,5 +1,5 @@
-import { TasoKernel, errorMessages, isImage } from '@/models/tasoKernel';
-import { DirObject } from '@/models/makeDirTree';
+import { TasoKernel, errorMessages, isImage } from '@/tasoCli/kernel';
+import { DirObject } from '@/tasoCli/makeDirTree';
 
 import firebase from 'firebase/app';
 import 'firebase/storage';
@@ -32,7 +32,7 @@ interface FileData {
 }
 
 export class TasoShell {
-  tasoKernel!: TasoKernel | null;
+  tasoKernel!: TasoKernel;
 
   user: string;
   rootDir: DirObject;

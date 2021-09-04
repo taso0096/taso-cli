@@ -52,7 +52,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { CmdData } from '@/models/tasoShell';
+import { CmdData } from '@/tasoCli/shell';
 
 type Resolve = (value: CmdData | PromiseLike<CmdData>) => void;
 

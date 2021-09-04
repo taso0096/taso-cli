@@ -1,5 +1,5 @@
-import { TasoShell, Result, FileType } from '@/models/tasoShell';
-import { getRootDir, getRepoDir } from '@/models/makeDirTree';
+import { TasoShell, Result, FileType } from '@/tasoCli/shell';
+import { getRootDir, getRepoDir } from '@/tasoCli/makeDirTree';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
