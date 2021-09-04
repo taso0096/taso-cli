@@ -330,7 +330,7 @@ export class TasoKernel {
     return errorResult;
   }
 
-  async loginTasoCli(cmd: string, option: string, email: string): Promise<string> {
+  private async loginTasoCli(cmd: string, option: string, email: string): Promise<string> {
     const currentUserEmail = await firebase.auth().currentUser?.email;
     if (currentUserEmail) {
       return `${cmd}: Already logged in as ${currentUserEmail}`;
@@ -370,7 +370,7 @@ export class TasoKernel {
     return errorMessages.InvalidOption(cmd);
   }
 
-  async logoutTasoCli(cmd: string): Promise<string> {
+  private async logoutTasoCli(cmd: string): Promise<string> {
     const currentUserEmail = await firebase.auth().currentUser?.email;
     if (!currentUserEmail) {
       return `${cmd}: No need to logout, not logged in`;
@@ -383,7 +383,7 @@ export class TasoKernel {
       .catch(() => errorMessages.Error(cmd));
   }
 
-  async resetTasoCli(cmd: string): Promise<string> {
+  private async resetTasoCli(cmd: string): Promise<string> {
     const currentUser = await firebase.auth().currentUser;
     if (!currentUser) {
       return errorMessages.Error(cmd);
@@ -405,5 +405,28 @@ export class TasoKernel {
         return `${cmd}: Directory tree has been updated. OGP image generation started.`;
       })
       .catch(() => errorMessages.Error(cmd));
+  }
+
+  share(argv: string[]): Result {
+    const errorResult: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 2) {
+      errorResult.data = errorMessages.TooManyArgs(argv[0]);
+      return errorResult;
+    }
+
+    const fileData = cmdArgv[0] ? this.tasoShell.getFullPath(cmdArgv[0]) : null;
+    if (fileData && fileData.type === undefined) {
+      errorResult.data = errorMessages.NoFile(argv[0], fileData.fullPath);
+      return errorResult;
+    }
+    const path = fileData?.fullPath || this.tasoShell.cd;
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('taso-cli')}&url=https://cli.taso.tech${path}`;
+    console.log(shareUrl);
+    window.open(shareUrl, '_blank');
+    return this.nullResult;
   }
 }

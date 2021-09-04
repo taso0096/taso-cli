@@ -32,7 +32,7 @@ interface FileData {
 }
 
 export class TasoShell {
-  tasoKernel: TasoKernel | null;
+  tasoKernel!: TasoKernel | null;
 
   user: string;
   rootDir: DirObject;
@@ -46,8 +46,6 @@ export class TasoShell {
   inputRef!: HTMLSpanElement;
 
   constructor(path: string) {
-    this.tasoKernel = null;
-
     this.user = 'taso0096';
     this.rootDir = {};
     this.homeDirFullPath = `/home/${this.user}`;
@@ -179,6 +177,8 @@ export class TasoShell {
           return this.tasoKernel.clear(argv);
         case 'taso-cli':
           return this.tasoKernel.tasoCli(argv);
+        case 'share':
+          return this.tasoKernel.share(argv);
         default:
           return {
             type: 'text',
