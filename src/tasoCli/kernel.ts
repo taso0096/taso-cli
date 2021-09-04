@@ -109,7 +109,7 @@ export class TasoKernel {
         return result;
     }
 
-    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
+    const fileData = this.tasoShell.getFile(cmdArgv[0]);
     if (fileData.type && fileData.type !== true) {
       this.tasoShell.cd = fileData.fullPath;
       return this.nullResult;
@@ -154,7 +154,7 @@ export class TasoKernel {
       return errorResult;
     }
 
-    const fileData = this.tasoShell.getFullPath(fileName || this.tasoShell.cd);
+    const fileData = this.tasoShell.getFile(fileName || this.tasoShell.cd);
     if (!fileData.type && fileData.type !== false) {
       errorResult.data = getFileTypeError(fileData.type, argv[0], fileName);
       return errorResult;
@@ -201,7 +201,7 @@ export class TasoKernel {
         return result;
     }
 
-    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
+    const fileData = this.tasoShell.getFile(cmdArgv[0]);
     if (fileData.type !== true) {
       result.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
       return result;
@@ -238,7 +238,7 @@ export class TasoKernel {
         return errorResult;
     }
 
-    const fileData = this.tasoShell.getFullPath(cmdArgv[0]);
+    const fileData = this.tasoShell.getFile(cmdArgv[0]);
     if (fileData.type !== true) {
       errorResult.data = getFileTypeError(fileData.type, argv[0], cmdArgv[0]);
       return errorResult;
@@ -254,11 +254,21 @@ export class TasoKernel {
     const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
     if (repoFilePath) {
       const imageBlob = await fetch(`https://raw.githubusercontent.com/taso0096/${this.tasoShell.repo}/main/${repoFilePath}`)
-        .then(res => res.blob());
+        .then(res => res.blob())
+        .catch(() => undefined);
+      if (!imageBlob) {
+        errorResult.data = errorMessages.Error(argv[0]);
+        return errorResult;
+      }
       result.data = URL.createObjectURL(imageBlob);
     } else {
       const imageBlob = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(fileData.fullPath.slice(1))}?alt=media`)
-        .then(res => res.blob());
+        .then(res => res.blob())
+        .catch(() => undefined);
+      if (!imageBlob) {
+        errorResult.data = errorMessages.Error(argv[0]);
+        return errorResult;
+      }
       result.data = URL.createObjectURL(imageBlob);
     }
     return result;
@@ -391,7 +401,7 @@ export class TasoKernel {
     const storageRef = firebase.storage().ref();
     const rootRef = storageRef.child('/');
     this.tasoShell.rootDir = await getRootDir(rootRef);
-    const userRepositories = this.tasoShell.getFullPath('~/repositories').type;
+    const userRepositories = this.tasoShell.getFile('~/repositories').type;
     if (userRepositories && userRepositories !== true) {
       const repoDir = await getRepoDir(this.tasoShell.user, this.tasoShell.repo);
       userRepositories[this.tasoShell.repo] = repoDir;
@@ -418,7 +428,7 @@ export class TasoKernel {
       return errorResult;
     }
 
-    const fileData = cmdArgv[0] ? this.tasoShell.getFullPath(cmdArgv[0]) : null;
+    const fileData = cmdArgv[0] ? this.tasoShell.getFile(cmdArgv[0]) : null;
     if (fileData && fileData.type === undefined) {
       errorResult.data = errorMessages.NoFile(argv[0], fileData.fullPath);
       return errorResult;

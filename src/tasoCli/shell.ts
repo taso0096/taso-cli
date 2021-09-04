@@ -68,7 +68,7 @@ export class TasoShell {
     defaultRootDir.home[this.user] = {};
     this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
 
-    const cdData = this.getFullPath(this.cd);
+    const cdData = this.getFile(this.cd);
     const fileName = this.cd.split('/').slice(-1)[0];
     if (!cdData.type) {
       this.cd = this.homeDirFullPath;
@@ -84,7 +84,7 @@ export class TasoShell {
     if (cdData.type && cdData.type !== true) {
       return;
     } else if (cdData.type) {
-      this.cd = this.getFullPath('..').fullPath;
+      this.cd = this.getFile('..').fullPath;
     }
     await this.execCmd({
       type: 'text',
@@ -96,7 +96,7 @@ export class TasoShell {
     this.inputRef = inputRef;
   }
 
-  getFullPath(path: string): FileData {
+  getFile(path: string): FileData {
     const argPath = path.split(/\/+/);
     if (argPath[0] === '') {
       argPath.shift();
