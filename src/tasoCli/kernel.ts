@@ -1,5 +1,5 @@
 import { TasoShell, Result, FileType } from '@/tasoCli/shell';
-import { getRootDir, getRepoDir } from '@/tasoCli/makeDirTree';
+import { getRootDir, getRepoDir, DirObject } from '@/tasoCli/makeDirTree';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -42,11 +42,16 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
 
 export const isImage = (extension: string): boolean => ['png', 'jpg', 'gif', 'ico'].includes(extension);
 
+const cmdList = ['cd', 'pwd', 'ls', 'date', 'cat', 'imgcat', 'history', 'clear', 'taso-cli', 'share'];
+
 export class TasoKernel {
   tasoShell!: TasoShell;
   nullResult: Result;
   nowHistoryIndex: number;
-  tmpCmd: string | null;
+  tmpHistoryCmd: string | null;
+  tmpTabCmd: string | null;
+  nextTabIndex: number;
+  candidateList: string[];
 
   constructor() {
     this.nullResult = {
@@ -54,7 +59,10 @@ export class TasoKernel {
       data: null
     };
     this.nowHistoryIndex = 0;
-    this.tmpCmd = null;
+    this.tmpHistoryCmd = null;
+    this.tmpTabCmd = null;
+    this.nextTabIndex = 0;
+    this.candidateList = [];
   }
 
   async boot(tasoShell: TasoShell): Promise<void> {
@@ -63,33 +71,70 @@ export class TasoKernel {
   }
 
   keyInput(key: string): void {
-    if (key.length !== 1) {
+    switch (key) {
+      case 'KEY_INPUT':
+        this.tmpTabCmd = null;
+        return;
+      case 'Tab':
+        this.tabCompletion(this.tasoShell.inputRef.innerText);
+        return;
+      case 'l':
+        this.clear(['clear']);
+        return;
+    }
+    if (key.startsWith('Arrow')) {
       const addIndex = key === 'ArrowUp' ? -1 : 1;
       const filteredHistory = this.tasoShell.history.map(history => history.cmd).filter(cmd => cmd);
-      if (this.tmpCmd === null) {
+      if (this.tmpHistoryCmd === null) {
         if (addIndex >= 0 || !filteredHistory.length) {
           return;
         }
-        this.tmpCmd = this.tasoShell.inputRef.innerText;
+        this.tmpHistoryCmd = this.tasoShell.inputRef.innerText;
         this.nowHistoryIndex = filteredHistory.length - 1;
       } else {
         const nextIndex = this.nowHistoryIndex + addIndex;
         if (nextIndex < 0) {
           return;
         } else if (nextIndex > filteredHistory.length - 1) {
-          this.tasoShell.inputRef.innerText = this.tmpCmd;
-          this.tmpCmd = null;
+          this.tasoShell.inputRef.innerText = this.tmpHistoryCmd;
+          this.tmpHistoryCmd = null;
           return;
         }
         this.nowHistoryIndex += addIndex;
       }
       this.tasoShell.inputRef.innerText = filteredHistory[this.nowHistoryIndex];
+    }
+  }
+
+  private tabCompletion(cmd: string): void {
+    if (!this.tmpTabCmd) {
+      this.tmpTabCmd = cmd.replace(/\u00a0/g, '\u0020');
+      this.nextTabIndex = 0;
+    }
+    const argv = this.tmpTabCmd.split(/ +/);
+    const spaceList = this.tmpTabCmd.split(/\S/).filter(v => v);
+    const lastArg = argv.slice(-1)[0];
+    if (argv.length === 1 && !lastArg) {
       return;
     }
-    switch (key) {
-      case 'l':
-        this.clear(['clear']);
+    const fileType = this.tasoShell.getFile(lastArg && lastArg.split('/').length >= 2 ? lastArg.split('/').slice(0, -1).join('/') : '.').type;
+    if (fileType === null) {
+      return;
     }
+    const searchList = argv.length === 1 ? cmdList : Object.keys(fileType as DirObject).filter(v => !v.startsWith('.'));
+    this.candidateList = searchList.filter(v => v.startsWith(argv.length === 1 ? lastArg : lastArg.split('/').slice(-1)[0]));
+    if (!this.candidateList.length) {
+      return;
+    } else if (this.nextTabIndex > this.candidateList.length - 1) {
+      this.nextTabIndex = 0;
+    }
+    if (argv.length === 1 || lastArg.split('/').length === 1) {
+      argv[argv.length - 1] = this.candidateList[this.nextTabIndex];
+    } else {
+      argv[argv.length - 1] = `${lastArg.split('/').slice(0, -1).join('/')}/${this.candidateList[this.nextTabIndex]}`;
+    }
+    this.tasoShell.inputRef.innerText = argv.map((v, i) => v + (spaceList[i] || '')).join('');
+    this.nextTabIndex++;
   }
 
   cd(argv: string[]): Result {

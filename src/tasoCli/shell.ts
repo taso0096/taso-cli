@@ -155,7 +155,8 @@ export class TasoShell {
       this.results.push(this.tasoKernel.nullResult);
       return;
     }
-    this.tasoKernel.tmpCmd = null;
+    this.tasoKernel.tmpHistoryCmd = null;
+    this.tasoKernel.tmpTabCmd = null;
     const result = await ((cmdText: string): Promise<Result> | Result => {
       const argv = cmdText.split(/ +/).filter(v => v !== '');
       switch (argv[0]) {

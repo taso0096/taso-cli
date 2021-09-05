@@ -18,6 +18,13 @@
       ref="cmdLineRef"
       :cd="tasoShell.getCdName()"
     />
+    <cmd-result
+      v-if="tasoShell.tasoKernel?.tmpTabCmd && tasoShell.tasoKernel.candidateList.length"
+      :result="{
+        type: 'files',
+        data: tasoShell.tasoKernel.candidateList
+      }"
+    />
   </div>
 </template>
 

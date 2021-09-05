@@ -14,10 +14,11 @@
       :style="!inputRef?.innerText && {
         display: 'inline-block'
       }"
-      @input="syncInput"
+      @input="keyInput"
       @keydown.enter.prevent="submitCmd.text"
       @keydown.up.prevent="submitCmd.key"
       @keydown.down.prevent="submitCmd.key"
+      @keydown.tab.prevent="submitCmd.key"
       @keydown.ctrl.l.prevent="submitCmd.key"
     ></span>
     <span
@@ -33,6 +34,7 @@
   line-height: 1.5;
   font-size: 16px;
   font-family: 'Courier Prime', sans-serif;
+  white-space: pre-wrap;
 
   ::selection {
     background: #fce300 !important;
@@ -98,11 +100,21 @@ export default defineComponent({
       }
     };
 
+    const keyInput = () => {
+      if (inputResolve.value) {
+        inputResolve.value({
+          type: 'key',
+          data: 'KEY_INPUT'
+        } as CmdData);
+      }
+    };
+
     return {
       inputRef,
       inputResolve,
       input,
-      submitCmd
+      submitCmd,
+      keyInput
     };
   }
 });

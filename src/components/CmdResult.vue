@@ -44,7 +44,7 @@
   font-size: 16px;
   font-family: 'Courier Prime', sans-serif;
   word-break: break-word;
-  white-space: pre-line;
+  white-space: pre-wrap;
 
   ::selection {
     background: #fce300 !important;
