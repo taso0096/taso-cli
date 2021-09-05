@@ -1,5 +1,6 @@
 import { TasoKernel, errorMessages, isImage } from '@/tasoCli/kernel';
 import { DirObject } from '@/tasoCli/makeDirTree';
+import appPackage from '../../package.json';
 
 import firebase from 'firebase/app';
 import 'firebase/storage';
@@ -32,6 +33,7 @@ interface FileData {
 }
 
 export class TasoShell {
+  version: string;
   tasoKernel!: TasoKernel;
 
   user: string;
@@ -46,6 +48,7 @@ export class TasoShell {
   inputRef!: HTMLSpanElement;
 
   constructor(path: string) {
+    this.version = appPackage.version;
     this.user = 'taso0096';
     this.rootDir = {};
     this.homeDirFullPath = `/home/${this.user}`;
@@ -66,6 +69,15 @@ export class TasoShell {
     defaultRootDir.home[this.user] = {};
     this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
     this.tasoKernel = tasoKernel;
+
+    this.history.push({
+      cd: '',
+      cmd: ''
+    });
+    this.results.push({
+      type: 'text',
+      data: `Welcome to taso-cli v${this.version}\n * privacy-policy: ~/privacy-policy.md`
+    });
 
     const cdData = this.getFile(this.cd);
     const fileName = this.cd.split('/').slice(-1)[0];

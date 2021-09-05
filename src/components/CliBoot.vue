@@ -37,7 +37,7 @@ export default defineComponent({
       '\nStarting kernel...'
     ]);
     const kernelTextList = reactive<string[]>([
-      'This website uses Google Analytics, an access analysis tool by Google.\nBy remaining on this site, you are deemed to have agreed to this.\nFor more information, please see "~/privacy-policy.md".\nPress any key to continue...',
+      'This website uses Google Analytics, an access analysis tool by Google.\nBy remaining on this site, you are deemed to have agreed to this.\nFor more information, please see "~/privacy-policy.md".\n\nPress any key to continue...',
       '\nRegistered shell with kernel.\n\nStarting shell...'
     ]);
 

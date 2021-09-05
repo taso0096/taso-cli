@@ -10,6 +10,7 @@
         :key="i"
       >
         <cmd-line
+          v-if="data.cd"
           :cd="data.cd"
           :cmd="data.cmd"
         />

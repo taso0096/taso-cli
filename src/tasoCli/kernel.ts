@@ -78,7 +78,7 @@ export class TasoKernel {
   }
 
   private async confirmCookie(): Promise<void> {
-    await this.cliBootRef.next();
+    await this.cliBootRef.next(1000);
     return new Promise(resolve => {
       document.addEventListener('keydown', () => {
         resolve();
@@ -241,7 +241,7 @@ export class TasoKernel {
       result.data = errorMessages.TooManyArgs(argv[0]);
       return result;
     }
-    result.data = String(new Date());
+    result.data = String(new Date()).replace(/ \(.+\)$/, '');
     return result;
   }
 
