@@ -127,6 +127,7 @@ export default defineComponent({
     });
 
     watchEffect(() => {
+      document.title = `taso-cli:${tasoShell.getCdName()}`;
       router.push({
         path: tasoShell.cd,
         query: router.currentRoute.value.query
