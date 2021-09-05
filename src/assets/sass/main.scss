@@ -2,12 +2,19 @@
 
 * {
   color: #fff !important;
+  ::selection {
+    background: #0066ff !important;
+  }
 }
 
 .green--text {
-  color: hsl(108, 100%, 50%) !important;
+  color: #33ff00 !important;
 }
 
 .purple--text {
-  color: hsl(288, 100%, 50%) !important;
+  color: #cc00ff !important;
+}
+
+.blue--text {
+  color: #66ccff !important;
 }

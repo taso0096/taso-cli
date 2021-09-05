@@ -16,7 +16,7 @@ export interface CmdData {
 }
 
 export interface Result {
-  type: 'text' | 'files' | 'img' | 'history' | null;
+  type: 'text' | 'files' | 'img' | 'history' | 'url' | null;
   data: string | string[] | (number | string)[][] | null;
 }
 
@@ -180,6 +180,8 @@ export class TasoShell {
           return this.tasoKernel.tasoCli(argv);
         case 'share':
           return this.tasoKernel.share(argv);
+        case 'open':
+          return this.tasoKernel.open(argv);
         default:
           return {
             type: 'text',

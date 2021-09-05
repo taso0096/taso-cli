@@ -34,6 +34,14 @@
         <div>{{ history[1] }}</div>
       </div>
     </div>
+
+    <a
+      v-if="result.type === 'url'"
+      :href="result.data"
+      target="_blank"
+      rel="noopener"
+      class="blue--text"
+    >{{ result.data }}</a>
   </div>
 </template>
 
@@ -46,9 +54,6 @@
   word-break: break-word;
   white-space: pre-wrap;
 
-  ::selection {
-    background: #fce300 !important;
-  }
   span {
     vertical-align: middle;
   }

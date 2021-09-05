@@ -31,7 +31,7 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
     case true:
       return errorMessages.NotDir(cmd, name);
     case false:
-      if (['cat', 'imgcat'].includes(cmd)) {
+      if (['cat', 'imgcat', 'open'].includes(cmd)) {
         return errorMessages.PermissionDenied(cmd, name);
       }
       return errorMessages.NotDir(cmd, name);
@@ -42,7 +42,7 @@ const getFileTypeError = (type: FileType, cmd: string, name: string): string => 
 
 export const isImage = (extension: string): boolean => ['png', 'jpg', 'gif', 'ico'].includes(extension);
 
-const cmdList = ['cd', 'pwd', 'ls', 'date', 'cat', 'imgcat', 'history', 'clear', 'taso-cli', 'share'];
+const cmdList = ['cd', 'pwd', 'ls', 'date', 'cat', 'imgcat', 'history', 'clear', 'share', 'open'];
 
 export class TasoKernel {
   tasoShell!: TasoShell;
@@ -431,10 +431,7 @@ export class TasoKernel {
       return `${cmd}: No need to logout, not logged in`;
     }
     return firebase.auth().signOut()
-      .then(() => {
-        console.log();
-        return `${cmd}: Logged out from ${currentUserEmail}`;
-      })
+      .then(() => `${cmd}: Logged out from ${currentUserEmail}`)
       .catch(() => errorMessages.Error(cmd));
   }
 
@@ -480,8 +477,41 @@ export class TasoKernel {
     }
     const path = fileData?.fullPath || this.tasoShell.cd;
     const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('taso-cli')}&url=https://cli.taso.tech${path}`;
-    console.log(shareUrl);
     window.open(shareUrl, '_blank');
     return this.nullResult;
+  }
+
+  async open(argv: string[]): Promise<Result> {
+    const errorResult: Result = {
+      type: 'text',
+      data: ''
+    };
+    const cmdArgv = argv.slice(1);
+    if (cmdArgv.length >= 2) {
+      errorResult.data = errorMessages.TooManyArgs(argv[0]);
+      return errorResult;
+    }
+
+    const fileData = this.tasoShell.getFile(cmdArgv[0]);
+    if (fileData.type !== true) {
+      errorResult.data = getFileTypeError(fileData.type, argv[0], fileData.fullPath);
+      return errorResult;
+    }
+    if (fileData.fullPath.split('.').slice(-1)[0] !== 'link') {
+      errorResult.data = errorMessages.FileFormat(argv[0], fileData.fullPath);
+      return errorResult;
+    }
+    const url = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(fileData.fullPath.slice(1))}?alt=media`)
+      .then(res => res.text())
+      .catch(() => undefined);
+    if (!url) {
+      errorResult.data = errorMessages.Error(argv[0]);
+      return errorResult;
+    }
+    window.open(url, '_blank')
+    return {
+      type: 'url',
+      data: url
+    };
   }
 }

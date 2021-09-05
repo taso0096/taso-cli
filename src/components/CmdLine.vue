@@ -36,9 +36,6 @@
   font-family: 'Courier Prime', sans-serif;
   white-space: pre-wrap;
 
-  ::selection {
-    background: #fce300 !important;
-  }
   span {
     vertical-align: middle;
   }
