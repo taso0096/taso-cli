@@ -273,7 +273,7 @@ export class TasoKernel {
 
     const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
     if (repoFilePath) {
-      result.data = await fetch(`https://api.github.com/repos/taso0096/${this.tasoShell.repo}/contents/${repoFilePath}`)
+      result.data = await fetch(`https://api.github.com/repos/${this.tasoShell.user}/${this.tasoShell.repo}/contents/${repoFilePath}`)
         .then(res => res.json())
         .then(json => atob(json.content))
         .catch(() => errorMessages.Error(argv[0]));
@@ -317,7 +317,7 @@ export class TasoKernel {
     };
     const repoFilePath = fileData.fullPath.split(`${this.tasoShell.homeDirFullPath}/repositories/${this.tasoShell.repo}/`)[1];
     if (repoFilePath) {
-      const imageBlob = await fetch(`https://raw.githubusercontent.com/taso0096/${this.tasoShell.repo}/main/${repoFilePath}`)
+      const imageBlob = await fetch(`https://raw.githubusercontent.com/${this.tasoShell.user}/${this.tasoShell.repo}/main/${repoFilePath}`)
         .then(res => res.blob())
         .catch(() => undefined);
       if (!imageBlob) {

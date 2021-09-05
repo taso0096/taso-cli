@@ -48,10 +48,52 @@ module.exports = {
         clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: /https:\/\/fonts.googleapis.com\/.*/,
+            urlPattern: /https:\/\/fonts\.googleapis\.com\/.*/,
             handler: 'networkFirst',
             options: {
               cacheName: `${cacheId}-fonts`,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60*60*24*30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /https:\/\/firebasestorage\.googleapis\.com\/.*/,
+            handler: 'networkFirst',
+            options: {
+              cacheName: `${cacheId}-storage`,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60*60*24*30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /https:\/\/api\.github\.com\/repos\/.*/,
+            handler: 'networkFirst',
+            options: {
+              cacheName: `${cacheId}-github`,
+              expiration: {
+                maxEntries: 20,
+                maxAgeSeconds: 60*60*24*30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /https:\/\/raw\.githubusercontent\.com\/.*/,
+            handler: 'networkFirst',
+            options: {
+              cacheName: `${cacheId}-github_row`,
               expiration: {
                 maxEntries: 20,
                 maxAgeSeconds: 60*60*24*30
