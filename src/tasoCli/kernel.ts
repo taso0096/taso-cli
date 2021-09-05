@@ -83,6 +83,9 @@ export class TasoKernel {
       document.addEventListener('keydown', () => {
         resolve();
       }, { once: true });
+      document.addEventListener('click', () => {
+        resolve();
+      }, { once: true });
     });
   }
 
