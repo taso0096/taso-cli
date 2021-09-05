@@ -1,6 +1,8 @@
 import { TasoShell, Result, FileType } from '@/tasoCli/shell';
 import { getRootDir, getRepoDir, DirObject } from '@/tasoCli/makeDirTree';
 
+import CliBoot from '@/components/CliBoot.vue';
+
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
@@ -52,8 +54,9 @@ export class TasoKernel {
   tmpTabCmd: string | null;
   nextTabIndex: number;
   candidateList: string[];
+  cliBootRef: InstanceType<typeof CliBoot>;
 
-  constructor() {
+  constructor(cliBootRef: InstanceType<typeof CliBoot>) {
     this.nullResult = {
       type: null,
       data: null
@@ -63,11 +66,24 @@ export class TasoKernel {
     this.tmpTabCmd = null;
     this.nextTabIndex = 0;
     this.candidateList = [];
+    this.cliBootRef = cliBootRef;
   }
 
   async boot(tasoShell: TasoShell): Promise<void> {
+    await this.confirmCookie();
+
     this.tasoShell = tasoShell;
+    await this.cliBootRef.next();
     await this.tasoShell.boot(this);
+  }
+
+  private async confirmCookie(): Promise<void> {
+    await this.cliBootRef.next();
+    return new Promise(resolve => {
+      document.addEventListener('keydown', () => {
+        resolve();
+      }, { once: true });
+    });
   }
 
   keyInput(key: string): void {
@@ -508,7 +524,7 @@ export class TasoKernel {
       errorResult.data = errorMessages.Error(argv[0]);
       return errorResult;
     }
-    window.open(url, '_blank')
+    window.open(url, '_blank');
     return {
       type: 'url',
       data: url

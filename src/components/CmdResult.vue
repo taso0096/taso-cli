@@ -48,9 +48,6 @@
 <style lang="scss" scoped>
 .cmd-result {
   padding: 1px 6px;
-  line-height: 1.5;
-  font-size: 16px;
-  font-family: 'Courier Prime', sans-serif;
   word-break: break-word;
   white-space: pre-wrap;
 

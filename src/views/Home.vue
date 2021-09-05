@@ -1,37 +1,44 @@
 <template>
-  <div class="home" @click="focusInput">
-    <div
-      v-for="(data, i) in tasoShell.history.slice(tasoShell.historyStartIndex)"
-      :key="i"
-    >
+  <div class="home">
+    <cli-boot
+      v-if="!tasoShell.tasoKernel"
+      ref="cliBootRef"
+    />
+    <template v-else>
+      <div
+        v-for="(data, i) in tasoShell.history.slice(tasoShell.historyStartIndex)"
+        :key="i"
+      >
+        <cmd-line
+          :cd="data.cd"
+          :cmd="data.cmd"
+        />
+        <cmd-result
+          v-if="tasoShell.results[i + tasoShell.historyStartIndex]"
+          :result="tasoShell.results[i + tasoShell.historyStartIndex]"
+        />
+      </div>
       <cmd-line
-        :cd="data.cd"
-        :cmd="data.cmd"
+        v-if="!tasoShell.history.length || tasoShell.results[tasoShell.history.length - 1]"
+        ref="cmdLineRef"
+        :cd="tasoShell.getCdName()"
       />
       <cmd-result
-        v-if="tasoShell.results[i + tasoShell.historyStartIndex]"
-        :result="tasoShell.results[i + tasoShell.historyStartIndex]"
+        v-if="tasoShell.tasoKernel?.tmpTabCmd && tasoShell.tasoKernel.candidateList.length"
+        :result="{
+          type: 'files',
+          data: tasoShell.tasoKernel.candidateList
+        }"
       />
-    </div>
-    <cmd-line
-      v-if="!tasoShell.history.length || tasoShell.results[tasoShell.history.length - 1]"
-      ref="cmdLineRef"
-      :cd="tasoShell.getCdName()"
-    />
-    <cmd-result
-      v-if="tasoShell.tasoKernel?.tmpTabCmd && tasoShell.tasoKernel.candidateList.length"
-      :result="{
-        type: 'files',
-        data: tasoShell.tasoKernel.candidateList
-      }"
-    />
+    </template>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, onMounted, nextTick, watchEffect } from 'vue';
+import { defineComponent, ref, reactive, onMounted, nextTick, watchEffect, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
+import CliBoot from '@/components/CliBoot.vue';
 import CmdLine from '@/components/CmdLine.vue';
 import CmdResult from '@/components/CmdResult.vue';
 
@@ -41,17 +48,26 @@ import { TasoShell } from '@/tasoCli/shell';
 export default defineComponent({
   name: 'Home',
   components: {
+    CliBoot,
     CmdLine,
     CmdResult
   },
   setup() {
     const router = useRouter();
 
+    const cliBootRef = ref<InstanceType<typeof CliBoot>>();
     const cmdLineRef = ref<InstanceType<typeof CmdLine>>();
     const tasoShell = reactive<TasoShell>(new TasoShell(router.currentRoute.value.query.path as string));
 
     const bootBIOS = async(): Promise<void> => {
-      const tasoKernel = new TasoKernel();
+      if (!cliBootRef.value) {
+        return;
+      }
+      await cliBootRef.value.next();
+      await cliBootRef.value.next(1000);
+      const tasoKernel = new TasoKernel(cliBootRef.value);
+      await cliBootRef.value.next(500);
+      await cliBootRef.value.next(1000);
       await tasoKernel.boot(tasoShell as TasoShell);
     };
 
@@ -102,6 +118,11 @@ export default defineComponent({
         path: tasoShell.cd
       });
       getInput();
+      document.addEventListener('click', focusInput);
+    });
+
+    onBeforeUnmount((): void => {
+      document.removeEventListener('click', focusInput);
     });
 
     watchEffect(() => {
@@ -112,6 +133,7 @@ export default defineComponent({
     });
 
     return {
+      cliBootRef,
       cmdLineRef,
       tasoShell,
       focusInput

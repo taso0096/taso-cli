@@ -58,8 +58,6 @@ export class TasoShell {
   }
 
   async boot(tasoKernel: TasoKernel): Promise<void> {
-    this.tasoKernel = tasoKernel;
-
     const rootDirRef = firebase.firestore().collection('settings').doc('rootDir');
     const rootDirText = await rootDirRef.get()
       .then(doc => doc.data()?.data)
@@ -67,11 +65,12 @@ export class TasoShell {
     const defaultRootDir: DirObject = { home: {} };
     defaultRootDir.home[this.user] = {};
     this.rootDir = rootDirText ? JSON.parse(rootDirText) : defaultRootDir;
+    this.tasoKernel = tasoKernel;
 
     const cdData = this.getFile(this.cd);
     const fileName = this.cd.split('/').slice(-1)[0];
+    this.cd = this.homeDirFullPath;
     if (!cdData.type) {
-      this.cd = this.homeDirFullPath;
       if (!fileName.match(/\./)) {
         await this.execCmd({
           type: 'text',
@@ -80,10 +79,10 @@ export class TasoShell {
         return;
       }
     }
-    this.cd = cdData.fullPath;
     if (cdData.type && cdData.type !== true) {
       return;
     } else if (cdData.type) {
+      this.cd = cdData.fullPath;
       this.cd = this.getFile('..').fullPath;
     }
     await this.execCmd({

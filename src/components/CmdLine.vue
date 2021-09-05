@@ -31,9 +31,6 @@
 <style lang="scss" scoped>
 .cmd-line {
   padding: 1px 6px;
-  line-height: 1.5;
-  font-size: 16px;
-  font-family: 'Courier Prime', sans-serif;
   white-space: pre-wrap;
 
   span {

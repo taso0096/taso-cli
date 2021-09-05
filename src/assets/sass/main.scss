@@ -1,7 +1,11 @@
 @import './reset.css';
 
 * {
+  line-height: 1.5 !important;
+  font-size: 16px !important;
+  font-family: 'Courier Prime', sans-serif !important;
   color: #fff !important;
+
   ::selection {
     background: #0066ff !important;
   }
