@@ -76,13 +76,15 @@ export default defineComponent({
       if (!cmdLineRef.value) {
         return;
       }
-      nextTick(() => focusInput());
       const cmd = await cmdLineRef.value.input();
       await tasoShell.execCmd(cmd);
-      nextTick(() => {
-        getInput();
-        window.scroll(0, document.documentElement.scrollHeight - window.innerHeight);
-      });
+      getInput();
+      if (!(cmd.type === 'key' && cmd.data === 'KEY_INPUT')) {
+        nextTick(() => {
+          focusInput();
+          window.scroll(0, document.documentElement.scrollHeight - window.innerHeight);
+        });
+      }
     };
 
     const focusInput = (): void => {
@@ -119,6 +121,7 @@ export default defineComponent({
         path: tasoShell.cd
       });
       getInput();
+      focusInput();
       document.addEventListener('click', focusInput);
     });
 
@@ -137,8 +140,7 @@ export default defineComponent({
     return {
       cliBootRef,
       cmdLineRef,
-      tasoShell,
-      focusInput
+      tasoShell
     };
   }
 });
