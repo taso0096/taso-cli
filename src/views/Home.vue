@@ -35,6 +35,12 @@
   </div>
 </template>
 
+<style scoped>
+.home {
+  padding-bottom: calc(env(safe-area-inset-bottom) / 2) !important;
+}
+</style>
+
 <script lang="ts">
 import { defineComponent, ref, reactive, onMounted, nextTick, watchEffect, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
@@ -108,6 +114,17 @@ export default defineComponent({
       }
     };
 
+    const tabCompletion = async() => {
+      await tasoShell.execCmd({
+        type: 'key',
+        data: 'Tab'
+      });
+      nextTick(() => {
+        focusInput();
+        window.scroll(0, document.documentElement.scrollHeight - window.innerHeight);
+      });
+    }
+
     onMounted(async(): Promise<void> => {
       await bootBIOS();
       const cmd = router.currentRoute.value.query.cmd;
@@ -123,10 +140,12 @@ export default defineComponent({
       getInput();
       focusInput();
       document.addEventListener('click', focusInput);
+      document.addEventListener('dblclick', tabCompletion);
     });
 
     onBeforeUnmount((): void => {
       document.removeEventListener('click', focusInput);
+      document.removeEventListener('dblclick', tabCompletion);
     });
 
     watchEffect(() => {
