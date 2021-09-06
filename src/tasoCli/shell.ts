@@ -81,21 +81,22 @@ export class TasoShell {
 
     const cdData = this.getFile(this.cd);
     const fileName = this.cd.split('/').slice(-1)[0];
-    this.cd = this.homeDirFullPath;
     if (!cdData.type) {
-      if (!fileName.match(/\./)) {
+      this.cd = this.homeDirFullPath;
+      if (cdData.type !== false) {
         await this.execCmd({
           type: 'text',
           data: `cd ${cdData.fullPath}`
         });
         return;
       }
-    }
-    if (cdData.type && cdData.type !== true) {
-      return;
-    } else if (cdData.type) {
+    } else {
       this.cd = cdData.fullPath;
-      this.cd = this.getFile('..').fullPath;
+      if (cdData.type !== true) {
+        return;
+      } else if (cdData.type) {
+        this.cd = this.getFile('..').fullPath;
+      }
     }
     await this.execCmd({
       type: 'text',
