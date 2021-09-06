@@ -31,5 +31,6 @@ module.exports = {
     'spaceInfixOps': 0,
     'max-len': ['error', {'code': 150}],
     'indent': ['error', 2],
+    'no-control-regex': 0,
   },
 };

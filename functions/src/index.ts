@@ -21,11 +21,8 @@ const generateCliHtml = (cmd: string, el: string): string => `
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
-  @font-face {
-    font-family: 'Courier Prime', monospace;
-  }
   * {
-    font-family: 'Courier Prime';
+    font-family: 'Courier Prime', sans-serif;
     font-size: 16px;
     line-height: 1.5;
     color: #fff;
@@ -99,7 +96,12 @@ export const getOgpHtml = functions
     const pathStack = req.path.slice(1).replace(/^~/, 'home/taso0096').replace(/\/$/, '').split('/');
     const fileType = getFileType(rootDir, pathStack);
     const trimPath = req.path.replace(/^\/home\/taso0096/, '~');
+    const queryCmd = req.query.cmd as string || '';
     if (fileType === undefined) { // 指定されたパスがない場合
+      if (req.path === '/') {
+        res.send(generateOgpHtml(trimPath, queryCmd, getOgpImageUrl('__:ls.webp')));
+        return;
+      }
       res.send(generateOgpHtml(trimPath, '', getOgpImageUrl('NO_FILE:***.webp')));
       return;
     } else if (trimPath.match(/^~\/repositories/)) { // リポジトリを指定した場合
@@ -107,7 +109,6 @@ export const getOgpHtml = functions
       return;
     }
 
-    const queryCmd = req.query.cmd as string || '';
     const canExecOgp = ['ls', 'ls -a', 'cat', 'imgcat'].includes(queryCmd);
     const extention = pathStack.slice(-1)[0].split('.').slice(-1)[0];
     const cmd = canExecOgp ? queryCmd : typeof fileType !== 'boolean' ? 'ls' : isImage(extention) ? 'imgcat' : 'cat';
@@ -190,7 +191,8 @@ export const onUpdateRootDir = functions
           const fileData = await fetch(`https://firebasestorage.googleapis.com/v0/b/taso-cli.appspot.com/o/${encodeURIComponent(path)}?alt=media`)
             .then((res) => res.text())
             .catch(() => undefined);
-          const el = `<div style="white-space: pre;">${fileData}</div>`;
+          const el = String(fileData).match(/[^\x01-\x7E]/) ?
+            '<div style="white-space: pre;">cat: cannot open Japanese file in OGP</div>' : `<div style="white-space: pre;">${fileData}</div>`;
           ogpList.push({
             cmd: 'cat',
             path: '/' + pathStack.join('/'),
@@ -232,6 +234,21 @@ export const onUpdateRootDir = functions
       cmd: '***',
       path: '/CANNOT_OPEN_REPO',
       html: generateCliHtml('***', '<div style="white-space: pre;">***: cannot open repository in OGP</div>'),
+    });
+
+    // ルートディレクトリ
+    const resultFiles = Object.entries(rootDir).map((file) => file[0] + (file[1] && file[1] !== true ? '/' : '')).filter((name) => name !== ':');
+    const dirDiv = (name: string) => `<div class="purple--text">${name}</div>`;
+    const fileDiv = (name: string) => `<div>${name}</div>`;
+    const el = `
+    <div class="ls">
+      ${resultFiles.filter((name) => !name.match(/^\./)).map((name) => name.match(/\/$/) ? dirDiv(name) : fileDiv(name)).join('')}
+    </div>
+    `;
+    ogpList.push({
+      cmd: 'ls',
+      path: '//',
+      html: generateCliHtml('ls', el),
     });
 
     const browser = await puppeteer.launch();
