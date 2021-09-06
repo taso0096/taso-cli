@@ -123,7 +123,7 @@ export default defineComponent({
         focusInput();
         window.scroll(0, document.documentElement.scrollHeight - window.innerHeight);
       });
-    }
+    };
 
     onMounted(async(): Promise<void> => {
       await bootBIOS();
