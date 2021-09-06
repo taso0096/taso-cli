@@ -1,0 +1,24 @@
+@import './reset.css';
+
+* {
+  line-height: 1.5 !important;
+  font-size: 16px !important;
+  font-family: 'Courier Prime', sans-serif !important;
+  color: #fff !important;
+
+  ::selection {
+    background: #0066ff !important;
+  }
+}
+
+.green--text {
+  color: #33ff00 !important;
+}
+
+.purple--text {
+  color: #cc00ff !important;
+}
+
+.blue--text {
+  color: #66ccff !important;
+}
